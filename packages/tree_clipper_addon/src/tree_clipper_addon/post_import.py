@@ -39,6 +39,10 @@ def post_import(
         group.location = context.region.view2d.region_to_view(  # ty:ignore[possibly-missing-attribute, invalid-assignment]
             event.mouse_region_x, event.mouse_region_y
         )
+
+        # account for DPI settings
+        group.location /= context.preferences.system.ui_scale  # ty:ignore[possibly-missing-attribute]
+
         # otherwise the others will be moved as well
         for node in node_tree.nodes:
             node.select = False
