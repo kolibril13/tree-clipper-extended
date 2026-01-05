@@ -20,25 +20,56 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Get version from blender_manifest.toml
-        working-directory: packages/tree_clipper_addon/src/tree_clipper_addon
-        id: get_version
+      - name: Get package version
+        working-directory: packages/tree_clipper/
+        id: get_package_version
         run: |
-          MANIFEST_VERSION=$(yq '.version' blender_manifest.toml)
-          echo "MANIFEST_VERSION=$MANIFEST_VERSION" >> "$GITHUB_OUTPUT"
+          PACKAGE_VERSION=$(yq '.project.version' pyproject.toml)
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Check if version matches
+      - name: Get addon version
+        working-directory: packages/tree_clipper_addon/src/tree_clipper_addon
+        id: get_addon_version
+        run: |
+          ADDON_VERSION=$(yq '.version' blender_manifest.toml)
+          echo "ADDON_VERSION=$ADDON_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if versions match
         env:
-          MANIFEST_VERSION: ${{ steps.get_version.outputs.MANIFEST_VERSION }}
+          PACKAGE_VERSION: ${{ steps.get_package_version.outputs.PACKAGE_VERSION }}
+          ADDON_VERSION: ${{ steps.get_addon_version.outputs.ADDON_VERSION }}
         run: |
           GIT_VERSION="${GITHUB_REF##refs/tags/v}"
-          if [[ "$MANIFEST_VERSION" != "$GIT_VERSION" ]]; then
-            echo "Version mismatch! Manifest: $MANIFEST_VERSION, Git: $GIT_VERSION"
+          if [[ "$PACKAGE_VERSION" != "$GIT_VERSION" ]]; then
+            echo "Version mismatch! Package: $PACKAGE_VERSION, Git: $GIT_VERSION"
             exit 1
-          else
-            echo "Version matches"
           fi
+          if [[ "$ADDON_VERSION" != "$GIT_VERSION" ]]; then
+            echo "Version mismatch! Addon: $ADDON_VERSION, Git: $GIT_VERSION"
+            exit 1
+          fi
+          echo "Versions match"
         continue-on-error: ${{ github.event.inputs.draft == 'true' }}
+
+  build-package:
+    needs: [check-version]
+    uses: ./.github/workflows/build-package.yml
+
+  publish:
+    needs: [build-package]
+    runs-on: [ubuntu-22.04]
+    environment: pypi
+    permissions:
+      id-token: write  # required for Trusted Publishing
+    steps:
+      - name: Download dists
+        uses: actions/download-artifact@v4
+        with:
+          name: tree-clipper-package
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
 
   bundle-extension:
     needs: [check-version]
