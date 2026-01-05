@@ -6,6 +6,11 @@ on:
     pull_request:
       branches: ["*"]
     workflow_dispatch:
+      inputs:
+        bpy_spec:
+          description: 'Override bpy requirement (e.g. "bpy==5.1.0" or "bpy>=5.0,<5.2")'
+          required: false
+          default: ""
 
 # Cancel in-progress runs when a new workflow with the same group is triggered
 concurrency:
@@ -43,6 +48,10 @@ jobs:
 
           - name: Install uv
             uses: astral-sh/setup-uv@v5
+
+          - name: Lock with bpy override
+            if: ${{ github.event.inputs.bpy_spec != '' }}
+            run: uv lock --upgrade-package "${{ github.event.inputs.bpy_spec }}"
 
           - name: Install tree_clipper
             run: uv sync --all-extras
