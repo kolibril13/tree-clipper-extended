@@ -3,6 +3,9 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
+      pypi:
+        type: boolean
+        default: false
       draft:
         type: boolean
         default: true
@@ -52,10 +55,12 @@ jobs:
         continue-on-error: ${{ github.event.inputs.draft == 'true' }}
 
   build-package:
+    if: ${{ github.event.inputs.pypi == 'true' }}
     needs: [check-version]
     uses: ./.github/workflows/build-package.yml
 
   publish-package:
+    if: ${{ github.event.inputs.pypi == 'true' }}
     needs: [build-package]
     runs-on: [ubuntu-22.04]
     environment: pypi
