@@ -6,7 +6,7 @@ id = "tree_clipper"
 version = "1.0.0"
 name = "Tree Clipper"
 tagline = "This is another extension"
-maintainer = "Algebraic"
+maintainer = "Algebraic <tree.clipper@algebraic.games>"
 # Supported types: "add-on", "theme"
 type = "add-on"
 

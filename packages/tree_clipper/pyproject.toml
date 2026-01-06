@@ -3,6 +3,26 @@ name = "tree-clipper"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = []
+maintainers = [
+    { name="Algebraic", email="tree.clipper@algebraic.games" },
+]
+authors = [
+    { name="Vollkornaffe", email="vollkornaffe@gmail.com" },
+    { name="BradyAJohnston" },
+    { name="codeRage", email="adriandahl@web.de" },
+]
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+description = "Python package to export/import Blender's node trees to/from JSON."
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/Algebraic-UG/tree_clipper"
+Issues = "https://github.com/Algebraic-UG/tree_clipper/issues"
 
 [project.optional-dependencies]
 bpy = [ "bpy>=5.0.0" ]
