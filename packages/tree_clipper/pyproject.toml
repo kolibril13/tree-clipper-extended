@@ -25,8 +25,8 @@ Homepage = "https://github.com/Algebraic-UG/tree_clipper"
 Issues = "https://github.com/Algebraic-UG/tree_clipper/issues"
 
 [project.optional-dependencies]
-bpy = [ "bpy>=5.0.0" ]
+bpy = [ "bpy >= 5.0.0, < 5.1" ]
 
 [build-system]
-requires = ["uv_build >= 0.9.18, <0.10.0"]
+requires = ["uv_build >= 0.9.18, < 0.10.0"]
 build-backend = "uv_build"

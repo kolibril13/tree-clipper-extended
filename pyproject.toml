@@ -3,7 +3,7 @@ name = "tree-clipper-workspace"
 version = "0.0.0" # not used
 requires-python = ">=3.11"
 dependencies = [
-    "bpy>=5.0.0",
+    "bpy >= 5.0.0, < 5.1",
     "tree-clipper",
 ]
 
