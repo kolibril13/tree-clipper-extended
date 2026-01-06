@@ -3,10 +3,10 @@ schema_version = "1.0.0"
 # Example of manifest file for a Blender extension
 # Change the values according to your extension
 id = "tree_clipper"
-version = "1.0.0"
+version = "0.1.0" # should match tree_clipper (core logic)
 name = "Tree Clipper"
 tagline = "This is another extension"
-maintainer = "Algebraic"
+maintainer = "Algebraic <tree.clipper@algebraic.games>"
 # Supported types: "add-on", "theme"
 type = "add-on"
 

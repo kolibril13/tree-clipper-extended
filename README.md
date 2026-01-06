@@ -11,6 +11,11 @@ Sharing node trees between users and in communities usually involves screenshots
 
 More to come once we actually finish building.
 
+## PyPI Package
+
+The core logic is available as a [PyPI package](https://pypi.org/project/tree-clipper/).
+For more info check out this [README.md](./packages/tree_clipper/README.md).
+
 ## Testing
 
 Testing leverages [pytest](https://docs.pytest.org/en/stable/), also see the [CI](.github/workflows/test.yml) setup.
