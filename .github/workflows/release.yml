@@ -55,7 +55,7 @@ jobs:
     needs: [check-version]
     uses: ./.github/workflows/build-package.yml
 
-  publish:
+  publish-package:
     needs: [build-package]
     runs-on: [ubuntu-22.04]
     environment: pypi
@@ -75,7 +75,7 @@ jobs:
     needs: [check-version]
     uses: ./.github/workflows/bundle-extension.yml
 
-  release:
+  release-extension:
     needs: [bundle-extension]
     runs-on: [ubuntu-22.04]
     steps:
