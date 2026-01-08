@@ -319,7 +319,7 @@ wheels = [
 
 [[package]]
 name = "tree-clipper"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/tree_clipper" }
 
 [package.optional-dependencies]

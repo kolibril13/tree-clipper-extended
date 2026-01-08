@@ -212,17 +212,17 @@ class SCENE_OT_Tree_Clipper_Import_Modal(bpy.types.Operator):
         assert isinstance(_INTERMEDIATE_IMPORT_CACHE, ImportIntermediate)
 
         if event.type in {"RIGHTMOUSE", "ESC"}:
-            context.window_manager.event_timer_remove(self._timer)
+            context.window_manager.event_timer_remove(self._timer)  # ty:ignore[invalid-argument-type, possibly-missing-attribute]
             _INTERMEDIATE_IMPORT_CACHE = None
             return {"FINISHED"}
 
         if _INTERMEDIATE_IMPORT_CACHE.step():
-            context.window_manager.progress_update(
+            context.window_manager.progress_update(  # ty:ignore[possibly-missing-attribute]
                 _INTERMEDIATE_IMPORT_CACHE.progress()
             )
             return {"RUNNING_MODAL"}
 
-        context.window_manager.progress_end()
+        context.window_manager.progress_end()  # ty:ignore[possibly-missing-attribute]
         report = _INTERMEDIATE_IMPORT_CACHE.importer.report
 
         if report.rename_material is not None:
