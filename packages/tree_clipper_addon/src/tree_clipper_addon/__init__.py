@@ -33,6 +33,8 @@ from .operators_import import (
 
 from .panel import SCENE_PT_Tree_Clipper_Panel
 
+from .preferences import TreeClipperPreferences
+
 classes = [
     Tree_Clipper_External_Export_Item,
     SCENE_UL_Tree_Clipper_External_Export_List,
@@ -47,6 +49,7 @@ classes = [
     SCENE_OT_Tree_Clipper_Import_File_Prepare,
     SCENE_OT_Tree_Clipper_Import_Clipboard_Prepare,
     SCENE_PT_Tree_Clipper_Panel,
+    TreeClipperPreferences,
 ]
 
 

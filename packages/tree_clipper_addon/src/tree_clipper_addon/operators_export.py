@@ -15,6 +15,7 @@ from ._vendor.tree_clipper.specific_handlers import (
 )
 from ._vendor.tree_clipper.export_nodes import ExportParameters, ExportIntermediate
 
+from .preferences import get_max_clipboard_bytes
 
 _INTERMEDIATE_EXPORT_CACHE = None
 
@@ -192,12 +193,19 @@ class SCENE_OT_Tree_Clipper_Export_Cache(bpy.types.Operator):
             if not external_item.skip
         )
         if clipboard:
-            bpy.context.window_manager.clipboard = (  # ty:ignore[invalid-assignment]
-                _INTERMEDIATE_EXPORT_CACHE.export_to_str(
-                    compress=compress,
-                    json_indent=self.json_indent,
-                )
+            string = _INTERMEDIATE_EXPORT_CACHE.export_to_str(
+                compress=compress,
+                json_indent=self.json_indent,
             )
+
+            # https://github.com/Algebraic-UG/tree_clipper/issues/134
+            utf8 = string.encode("utf-8")
+            if len(utf8) > get_max_clipboard_bytes():
+                raise RuntimeError(
+                    f"The export exceeds the clipboard limit ({get_max_clipboard_bytes()}) set in the addon preferences."
+                )
+
+            bpy.context.window_manager.clipboard = utf8  # ty:ignore[invalid-assignment]
         else:
             _INTERMEDIATE_EXPORT_CACHE.export_to_file(
                 file_path=Path(self.output_file),
