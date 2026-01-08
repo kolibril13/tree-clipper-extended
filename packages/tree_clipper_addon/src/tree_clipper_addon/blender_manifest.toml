@@ -5,7 +5,7 @@ schema_version = "1.0.0"
 id = "tree_clipper"
 version = "0.1.0" # should match tree_clipper (core logic)
 name = "Tree Clipper"
-tagline = "This is another extension"
+tagline = "Export and import Blender node trees as JSON"
 maintainer = "Algebraic <tree.clipper@algebraic.games>"
 # Supported types: "add-on", "theme"
 type = "add-on"
