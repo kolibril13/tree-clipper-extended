@@ -328,12 +328,12 @@ bpy = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "bpy", marker = "extra == 'bpy'", specifier = ">=5.0.0" }]
+requires-dist = [{ name = "bpy", marker = "extra == 'bpy'", specifier = ">=5.0.0,<5.1" }]
 provides-extras = ["bpy"]
 
 [[package]]
 name = "tree-clipper-addon"
-version = "0.1.0"
+version = "0.0.0"
 source = { virtual = "packages/tree_clipper_addon" }
 dependencies = [
     { name = "tree-clipper" },
@@ -344,7 +344,7 @@ requires-dist = [{ name = "tree-clipper", editable = "packages/tree_clipper" }]
 
 [[package]]
 name = "tree-clipper-tools"
-version = "0.1.0"
+version = "0.0.0"
 source = { virtual = "packages/tree_clipper_tools" }
 dependencies = [
     { name = "tree-clipper" },
@@ -375,7 +375,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bpy", specifier = ">=5.0.0" },
+    { name = "bpy", specifier = ">=5.0.0,<5.1" },
     { name = "tree-clipper", editable = "packages/tree_clipper" },
 ]
 
