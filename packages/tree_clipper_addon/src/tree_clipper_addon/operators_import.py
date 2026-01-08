@@ -17,6 +17,7 @@ from ._vendor.tree_clipper.specific_handlers import (
 from ._vendor.tree_clipper.import_nodes import ImportParameters, ImportIntermediate
 
 from .post_import import post_import
+from .preferences import get_show_advanced_options
 
 _INTERMEDIATE_IMPORT_CACHE = None
 
@@ -127,7 +128,13 @@ class SCENE_OT_Tree_Clipper_Import_Cache(bpy.types.Operator):
             item.description = external_item["description"]
             item.set_active_pointer_type(external_item["fixed_type_name"])
 
-        return context.window_manager.invoke_props_dialog(self)  # ty:ignore[possibly-missing-attribute]
+        if (
+            len(context.scene.tree_clipper_external_import_items.items) != 0
+            or get_show_advanced_options()
+        ):
+            return context.window_manager.invoke_props_dialog(self)  # ty:ignore[possibly-missing-attribute]
+        else:
+            return self.execute(context)
 
     def execute(
         self, context: bpy.types.Context
@@ -166,10 +173,10 @@ class SCENE_OT_Tree_Clipper_Import_Cache(bpy.types.Operator):
             context.scene.tree_clipper_external_import_items,
             Tree_Clipper_External_Import_Items,
         )
-        head, body = self.layout.panel("advanced", default_closed=True)  # ty:ignore[possibly-missing-attribute]
-        head.label(text="Advanced")
-        if body is not None:
-            body.prop(self, "debug_prints")
+
+        if get_show_advanced_options():
+            self.layout.prop(self, "debug_prints")  # ty:ignore[possibly-missing-attribute]
+
         if len(context.scene.tree_clipper_external_import_items.items) == 0:
             return
         self.layout.label(text="References to External:")  # ty:ignore[possibly-missing-attribute]
