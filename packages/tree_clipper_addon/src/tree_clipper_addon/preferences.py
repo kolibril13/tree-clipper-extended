@@ -27,12 +27,12 @@ The default value is somewhat conservative, but not guaranteed to be safe.""",
 
 
 def get_max_clipboard_bytes():
-    return bpy.context.preferences.addons.get(
+    return bpy.context.preferences.addons.get(  # ty:ignore[possibly-missing-attribute]
         __package__  # ty:ignore[invalid-argument-type]
     ).preferences.max_clipboard_bytes  # ty:ignore[possibly-missing-attribute]
 
 
 def get_show_advanced_options():
-    return bpy.context.preferences.addons.get(
+    return bpy.context.preferences.addons.get(  # ty:ignore[possibly-missing-attribute]
         __package__  # ty:ignore[invalid-argument-type]
     ).preferences.show_advanced_options  # ty:ignore[possibly-missing-attribute]
