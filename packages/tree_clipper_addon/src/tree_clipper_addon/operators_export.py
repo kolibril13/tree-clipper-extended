@@ -15,7 +15,7 @@ from ._vendor.tree_clipper.specific_handlers import (
 )
 from ._vendor.tree_clipper.export_nodes import ExportParameters, ExportIntermediate
 
-from .preferences import get_max_clipboard_bytes
+from .preferences import get_max_clipboard_bytes, get_show_advanced_options
 
 _INTERMEDIATE_EXPORT_CACHE = None
 
@@ -35,7 +35,10 @@ class SCENE_OT_Tree_Clipper_Export_Prepare(bpy.types.Operator):
     def invoke(
         self, context: bpy.types.Context, event: bpy.types.Event
     ) -> set["rna_enums.OperatorReturnItems"]:
-        return context.window_manager.invoke_props_dialog(self)  # ty:ignore[possibly-missing-attribute]
+        if get_show_advanced_options():
+            return context.window_manager.invoke_props_dialog(self)  # ty:ignore[possibly-missing-attribute]
+        else:
+            return self.execute(context)
 
     def execute(
         self, context: bpy.types.Context
@@ -61,12 +64,9 @@ class SCENE_OT_Tree_Clipper_Export_Prepare(bpy.types.Operator):
         self.layout.prop(  # ty:ignore[possibly-missing-attribute]
             self, "name", text="Material" if self.is_material else "Node Tree"
         )
-        head, body = self.layout.panel("advanced", default_closed=True)  # ty:ignore[possibly-missing-attribute]
-        head.label(text="Advanced")
-        if body is not None:
-            body.prop(self, "export_sub_trees")
-            body.prop(self, "debug_prints")
-            body.prop(self, "write_from_roots")
+        self.layout.prop(self, "export_sub_trees")  # ty:ignore[possibly-missing-attribute]
+        self.layout.prop(self, "debug_prints")  # ty:ignore[possibly-missing-attribute]
+        self.layout.prop(self, "write_from_roots")  # ty:ignore[possibly-missing-attribute]
 
 
 class SCENE_OT_Tree_Clipper_Export_Modal(bpy.types.Operator):
