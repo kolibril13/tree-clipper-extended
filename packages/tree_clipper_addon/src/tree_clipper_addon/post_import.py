@@ -20,7 +20,7 @@ def post_import(
         if not isinstance(context.space_data, bpy.types.SpaceNodeEditor):
             return "Not a node editor."
 
-        node_tree = context.space_data.node_tree
+        node_tree = context.space_data.edit_tree
         if node_tree is None:
             return "No active tree to attach to."
 
