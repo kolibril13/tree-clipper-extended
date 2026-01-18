@@ -23,7 +23,11 @@ class SCENE_PT_Tree_Clipper_Panel(bpy.types.Panel):
         if node_tree is None:
             export_col.enabled = False
         else:
-            is_material = isinstance(context.space_data.id, bpy.types.Material)
+            is_root = context.space_data.node_tree == context.space_data.edit_tree
+            is_material = is_root and isinstance(
+                context.space_data.id, bpy.types.Material
+            )
+
             if is_material:
                 name = context.space_data.id.name  # ty:ignore[possibly-missing-attribute]
             else:
