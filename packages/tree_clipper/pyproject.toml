@@ -10,6 +10,7 @@ authors = [
     { name="Vollkornaffe", email="vollkornaffe@gmail.com" },
     { name="BradyAJohnston" },
     { name="codeRage", email="adriandahl@web.de" },
+    { name="Jan-Hendrik Müller" },
 ]
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
