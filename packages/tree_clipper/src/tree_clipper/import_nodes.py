@@ -497,20 +497,22 @@ From root: {from_root.to_str()}"""
         self.report.last_getter = getter
 
 
-# TODO: make this less strict: we should allow import of smaller minor version
 def _check_version(data: dict) -> None:
     exporter_blender_version = data[BLENDER_VERSION]
-    exporter_version = data[TREE_CLIPPER_VERSION]
-
     importer_blender_version = bpy.app.version_string
-    importer_version = CURRENT_TREE_CLIPPER_VERSION
 
     if exporter_blender_version != importer_blender_version:
         raise RuntimeError(
             f"Blender version mismatch. File version: {exporter_blender_version}, but running {importer_blender_version}"
         )
 
-    if exporter_version != CURRENT_TREE_CLIPPER_VERSION:
+    exporter_version = data[TREE_CLIPPER_VERSION]
+    importer_version = CURRENT_TREE_CLIPPER_VERSION
+
+    ex_major, ex_minor, _ex_patch = [int(n) for n in exporter_version.split(".")]
+    im_major, im_minor, _im_patch = [int(n) for n in importer_version.split(".")]
+
+    if ex_major != im_major or ex_minor > im_minor:
         raise RuntimeError(
             f"Version mismatch. File version: {exporter_version}, but running {importer_version}"
         )
