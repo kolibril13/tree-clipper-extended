@@ -13,6 +13,26 @@
                 "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Export all trees for all blend files",
+            "type": "shell",
+            "command": "${workspaceFolder}/scripts/export_all_trees_for_all_blend.sh",
+            "args": [
+                "${input:exportVersion}",
+                "${workspaceFolder}/packages/tree_clipper/tests/binary_blend_files"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
         }
-    ]
+    ],
+    "inputs": [
+        {
+            "id": "exportVersion",
+            "type": "promptString",
+            "description": "Version for <blendname>_<version> directories (e.g. v0.1.1)"
+        }
+    ],
 }
