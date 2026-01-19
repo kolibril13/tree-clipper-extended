@@ -15,12 +15,12 @@
             "problemMatcher": []
         },
         {
-            "label": "Export all trees for all blend files",
+            "label": "Export all trees for future backwards compatibility checks",
             "type": "shell",
             "command": "${workspaceFolder}/scripts/export_all_trees_for_all_blend.sh",
             "args": [
-                "${input:exportVersion}",
-                "${workspaceFolder}/packages/tree_clipper/tests/binary_blend_files"
+                "${workspaceFolder}/packages/tree_clipper/tests/binary_blend_files",
+                "${workspaceFolder}/packages/tree_clipper/tests/backwards_compatibility/${input:exportVersion}"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -32,7 +32,7 @@
         {
             "id": "exportVersion",
             "type": "promptString",
-            "description": "Version for <blendname>_<version> directories (e.g. v0.1.1)"
+            "description": "Version that is backed up (e.g. v0.1.1)"
         }
     ],
 }

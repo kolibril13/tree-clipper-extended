@@ -1,24 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${1:-}"
-ROOT_DIR="${2:-}"
+INPUT_DIR="${1:-}"
+OUTPUT_DIR="${2:-}"
 
-if [[ -z "$VERSION" ]]; then
-  echo "Usage: $0 <version> [root_dir]" >&2
-  exit 1
-fi
-
-echo "Exporting trees for all .blend files under: $ROOT_DIR"
-echo "Using version: $VERSION"
+echo "Exporting trees for all .blend files under: $INPUT_DIR"
+echo "Output goes to: $OUTPUT_DIR"
 echo
 
 # Find all .blend files and process them
-find "$ROOT_DIR" -type f -name '*.blend' -print0 | while IFS= read -r -d '' file; do
+find "$INPUT_DIR" -type f -name '*.blend' -print0 | while IFS= read -r -d '' file; do
   dir="$(dirname "$file")"
+  dir="$(realpath --relative-to "$INPUT_DIR" "$dir")"
   base="$(basename "$file")"
   base_no_ext="${base%.blend}"
-  outdir="${dir}/${base_no_ext}_${VERSION}"
+  outdir="${OUTPUT_DIR}/${dir}/${base_no_ext}"
 
   echo "Processing: $file"
   echo "  -> Output directory: $outdir"
