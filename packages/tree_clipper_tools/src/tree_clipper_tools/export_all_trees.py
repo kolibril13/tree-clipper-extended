@@ -1,12 +1,8 @@
-from Cython.Compiler.CythonScope import type_identifier
-from numpy import require
 from tree_clipper.specific_handlers import BUILT_IN_EXPORTER
 from tree_clipper.export_nodes import ExportIntermediate, ExportParameters
 import argparse
-from genericpath import exists
 from pathlib import Path
 import bpy
-import sys
 
 from tree_clipper.common import NODE_TREE
 
