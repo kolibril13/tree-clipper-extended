@@ -1,6 +1,6 @@
 [project]
 name = "tree-clipper"
-version = "0.1.1"
+version = "0.1.2"
 requires-python = ">=3.11"
 dependencies = []
 maintainers = [
@@ -10,6 +10,7 @@ authors = [
     { name="Vollkornaffe", email="vollkornaffe@gmail.com" },
     { name="BradyAJohnston" },
     { name="codeRage", email="adriandahl@web.de" },
+    { name="Jan-Hendrik Müller" },
 ]
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
