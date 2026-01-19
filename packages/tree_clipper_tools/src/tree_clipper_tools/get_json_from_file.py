@@ -25,6 +25,9 @@ export_intermediate = ExportIntermediate(
     )
 )
 
+while export_intermediate.step():
+    pass
+
 export_intermediate.set_external(
     (
         external_id,
