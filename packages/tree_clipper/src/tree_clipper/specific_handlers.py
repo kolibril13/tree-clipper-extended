@@ -514,7 +514,9 @@ class LinksImporter(SpecificImporter[bpy.types.NodeLinks]):
                 None,
             )
             if other is None:
-                raise RuntimeError("No link is occupying sort id {multi_input_sort_id}")
+                raise RuntimeError(
+                    f"No link is occupying sort id {multi_input_sort_id}"
+                )
 
             link.swap_multi_input_sort_id(other)
 
