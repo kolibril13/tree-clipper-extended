@@ -1,3 +1,5 @@
+![Featured Image](icon.svg)
+
 # Tree Clipper Package
 
 This is the reusable core logic of the Blender extension with the same name.

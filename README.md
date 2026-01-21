@@ -1,4 +1,4 @@
-
+![Featured Image](packages/tree_clipper/icon.svg)
 
 # Tree Clipper
 
