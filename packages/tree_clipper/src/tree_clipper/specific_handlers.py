@@ -497,11 +497,20 @@ class LinksImporter(SpecificImporter[bpy.types.NodeLinks]):
 
             multi_links.append(i)
 
+        if self.importer.debug_prints:
+            print(f"{self.from_root.to_str()}: multilinks are {multi_links}")
+
         for i in multi_links:
             link = self.getter()[i]
             multi_input_sort_id = self.serialization[ITEMS][i][DATA][
                 MULTI_INPUT_SORT_ID
             ]
+
+            if self.importer.debug_prints:
+                print(
+                    f"{self.from_root.to_str()}: putting link {i} in the correct place: {multi_input_sort_id}"
+                )
+
             if link.multi_input_sort_id == multi_input_sort_id:
                 continue
 
@@ -514,7 +523,9 @@ class LinksImporter(SpecificImporter[bpy.types.NodeLinks]):
                 None,
             )
             if other is None:
-                raise RuntimeError("No link is occupying sort id {multi_input_sort_id}")
+                raise RuntimeError(
+                    f"No link is occupying sort id {multi_input_sort_id}"
+                )
 
             link.swap_multi_input_sort_id(other)
 
