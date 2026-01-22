@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.4] - 2026-01-21
+
+Increasing the default clipboard size limit.
+
+### Added
+
+### Changed
+
+### Fixed
+
 ## [0.1.3] - 2026-01-21
 
 This release is only there to push the new logo.
