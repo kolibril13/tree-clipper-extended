@@ -13,6 +13,50 @@ Sharing node trees between users and in communities usually involves screenshots
 
 More to come once we actually finish building.
 
+## Features
+
+The following features are already available:
+- Enables export/import of node trees, `Geometry`-, `Shader`-, `Compositor`-, and `TextureNodeTree`s.
+- Either plain JSON or compressed strings of the form `TreeClipper::<base64>`.
+- The trees' interfaces are included.
+- For compositor trees, scene attributes are stored and verified on import.
+- Explicit interface for referenced "external" items that are not part of the export.
+- The core logic is available as [PyPI Package](#pypi-package).
+
+We aim to maintain backwards compatibility, and in principle custom node trees can also be supported.
+
+We plan to support the remaining, more niche node trees as well. For example, [node based worlds](https://docs.blender.org/api/current/bpy.types.World.html#bpy.types.World.node_tree).
+
+## Installation
+
+We plan to publish the extension on the [official site](https://extensions.blender.org/) soon.
+
+In the meantime, you can download the [latest release](https://github.com/Algebraic-UG/tree_clipper/releases/latest): scroll down and download the `tree_clipper-x.x.x.zip` file, then drag and drop into Blender.
+
+Alternatively, [you can add a repository](https://docs.blender.org/manual/en/latest/editors/preferences/extensions.html#repositories) and get automatic updates, for the URL use:
+```https://github.com/Algebraic-UG/tree_clipper/releases/latest/download/index.json```
+
+## Related Work
+
+There are several projects that are similar, the ones we're aware of include
+- [Node To Python](https://extensions.blender.org/add-ons/node-to-python/)
+- [NodeKit](https://github.com/j10er/NodeKit)
+- [Copy/Paste Nodes](https://extensions.blender.org/add-ons/copy-paste-nodes/)
+- [Node Kit](https://superhivemarket.com/products/node-kit)
+- [nodebpy](https://github.com/BradyAJohnston/nodebpy)
+- [geometry-script](https://github.com/carson-katri/geometry-script)
+- [geonodes](https://github.com/al1brn/geonodes)
+
+[Node To Python](https://extensions.blender.org/add-ons/node-to-python/) differs in that it uses Python code as storage. While this alleviates the need of a dependency for import (other than Blender itself), it is inherently not backwards-compatible and doesn't allow reading without Blender. (There is a [plan](https://github.com/BrendanParmer/NodeToPython/issues/107) to support JSON export)
+
+[NodeKit](https://github.com/j10er/NodeKit) is not developed actively anymore, and the author instead advises development of Tree Clipper.
+
+[Copy/Paste Nodes](https://extensions.blender.org/add-ons/copy-paste-nodes/) appears to have a different scope. It supports copying nodes into a tree directly. Tree Clipper doesn't do this, see also this [issue](https://github.com/Algebraic-UG/tree_clipper/issues/74). There's also no documented way to re-use the core logic in another addon.
+
+[Node Kit](https://superhivemarket.com/products/node-kit) appears to be similar. It differs in distribution, as it is sold on Superhive ($15 at the time of writing).
+
+In comparison to Tree Clipper, [nodebpy](https://github.com/BradyAJohnston/nodebpy), [geometry-script](https://github.com/carson-katri/geometry-script), and [geonodes](https://github.com/al1brn/geonodes) are different as they do not support exporting trees from Blender, but rather make it easier to define nodes from Python.
+
 ## PyPI Package
 
 The core logic is available as a [PyPI package](https://pypi.org/project/tree-clipper/).
@@ -59,7 +103,7 @@ It is recommended to use [vscode](https://code.visualstudio.com/) with these ext
 Ideally, the [core logic](packages/tree_clipper/) of Tree Clipper should not be used directly as a dependency in downstream addons, and it should be [vendorized](https://pypi.org/project/vendorize/) instead.
 This is what the [Tree Clipper Addon](packages/tree_clipper_addon/) does as well.
 
-The motivation for this is that we expect other addons like [Squishy Volumes](https://github.com/Algebraic-UG/squishy_volumes) to use an incompatible version of Tree Clipper.
+The motivation for this is that we expect other addons like [Squishy Volumes](https://github.com/Algebraic-UG/squishy_volumes) to use potentially incompatible version of Tree Clipper.
 Vendoring avoids version conflicts and ensures that all addons can load.
 > [!IMPORTANT]
 > Vendoring currently has two drawbacks developers must be aware of:
