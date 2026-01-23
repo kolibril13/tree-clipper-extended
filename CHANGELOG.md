@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.5] - 2026-01-23
+
+This version might be the first to be in the extension store.
+
+### Added
+
+Reporting runtime of the import.
+
+### Changed
+
+Tags of the addon are now "Import-Export" and "Node".
+
+### Fixed
+
 ## [0.1.4] - 2026-01-21
 
 Increasing the default clipboard size limit.
