@@ -15,7 +15,7 @@ website = "https://github.com/Algebraic-UG/tree_clipper"
 
 # Optional list defined by Blender and server, see:
 # https://docs.blender.org/manual/en/dev/advanced/extensions/tags.html
-tags = ["Import-Export", "Node", "Compositing", "Geometry Nodes", "Material"]
+tags = ["Import-Export", "Node"]
 
 
 blender_version_min = "5.0.0"
