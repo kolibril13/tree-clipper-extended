@@ -1,4 +1,5 @@
 import bpy
+import time
 
 from typing import Any, TYPE_CHECKING
 
@@ -20,6 +21,7 @@ from .post_import import post_import
 from .preferences import get_show_advanced_options
 
 _INTERMEDIATE_IMPORT_CACHE = None
+TIMER = None
 
 
 class SCENE_OT_Tree_Clipper_Import_File_Prepare(bpy.types.Operator):
@@ -164,6 +166,8 @@ class SCENE_OT_Tree_Clipper_Import_Cache(bpy.types.Operator):
         )
 
         # seems impossible to use bl_idname here
+        global TIMER
+        TIMER = time.time()
         bpy.ops.scene.tree_clipper_import_modal("INVOKE_DEFAULT")  # ty: ignore[unresolved-attribute]
         return {"FINISHED"}
 
@@ -221,6 +225,8 @@ class SCENE_OT_Tree_Clipper_Import_Modal(bpy.types.Operator):
                 _INTERMEDIATE_IMPORT_CACHE.progress()
             )
             return {"RUNNING_MODAL"}
+
+        self.report({"INFO"}, "--- Import took %s seconds ---" % (time.time() - TIMER))  # ty:ignore[unsupported-operator]
 
         context.window_manager.progress_end()  # ty:ignore[possibly-missing-attribute]
         report = _INTERMEDIATE_IMPORT_CACHE.importer.report
