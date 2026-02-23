@@ -1,11 +1,26 @@
 [project]
 name = "tree-clipper-workspace"
 version = "0.0.0" # not used
-requires-python = ">=3.11"
-dependencies = [
-    "bpy >= 5.0.0, < 5.1",
-    "tree-clipper",
-]
+
+# XXX:
+# This is inconvenient, there's probably a better way.
+# To test and build with a certain Blender version, comment in the respective lines below
+# and run this command to rebuild the .venv
+#
+#   uv sync --python 3.13 --prerelease=allow --index-strategy unsafe-best-match
+#
+# where the python version matches the one used by the respective Blender version.
+# The index-strategy option is so that either the official index or the one from the dailybpy can be used.
+
+#requires-python = "== 3.11.*"
+#dependencies = [ "bpy==5.0.*", "tree-clipper"]
+
+requires-python = "== 3.13.*"
+dependencies = [ "bpy==5.1.*", "tree-clipper"]
+
+#requires-python = "== 3.13.*"
+#dependencies = [ "bpy==5.2.*", "tree-clipper"]
+
 
 [tool.uv.workspace]
 members = [
@@ -36,9 +51,9 @@ norecursedirs = [".git", "build", "__pycache__", "_vendor"]
 target = "packages/tree_clipper_addon/src/tree_clipper_addon/_vendor"
 packages = ["packages/tree_clipper"]
 
-#[[tool.uv.index]]
-#name = "bpy"
-#url = "https://bradyajohnston.github.io/dailybpy/"
+[[tool.uv.index]]
+name = "bpy"
+url = "https://bradyajohnston.github.io/dailybpy/"
 
 [[tool.uv.index]]
 name = "testpypi"

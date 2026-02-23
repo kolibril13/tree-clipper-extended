@@ -1,7 +1,6 @@
 [project]
 name = "tree-clipper"
 version = "0.1.5"
-requires-python = ">=3.11"
 dependencies = []
 maintainers = [
     { name="Algebraic", email="tree.clipper@algebraic.games" },
@@ -26,7 +25,7 @@ Homepage = "https://github.com/Algebraic-UG/tree_clipper"
 Issues = "https://github.com/Algebraic-UG/tree_clipper/issues"
 
 [project.optional-dependencies]
-bpy = [ "bpy >= 5.0.0, < 5.1" ]
+bpy = [ "bpy >= 5" ]
 
 [build-system]
 requires = ["uv_build >= 0.9.18, < 0.10.0"]
