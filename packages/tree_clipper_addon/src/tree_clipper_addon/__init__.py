@@ -54,7 +54,7 @@ classes = [
 
 
 def register() -> None:
-    print("reloaded")
+    print("Registering Tree Clipper")
     for cls in classes:
         bpy.utils.register_class(cls)
     # the pointer properties in the items make it impossible to store on the operator
