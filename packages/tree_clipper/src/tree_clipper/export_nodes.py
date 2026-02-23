@@ -223,6 +223,9 @@ class Exporter:
 
             # https://github.com/Algebraic-UG/tree_clipper/issues/96
             def clamp_and_report(value: int | float) -> int | float:
+                # https://github.com/Algebraic-UG/tree_clipper/issues/162
+                if isinstance(obj, bpy.types.NodeTreeInterfaceSocket):
+                    return value
                 # https://github.com/Algebraic-UG/tree_clipper/issues/132
                 if (
                     isinstance(obj, bpy.types.NodeSocket)
