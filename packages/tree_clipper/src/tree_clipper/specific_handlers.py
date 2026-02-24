@@ -92,6 +92,7 @@ ACTIVE_OUTPUT_INDEX = "active_output_index"
 ACTIVE_GENERATION_INDEX = "active_generation_index"
 ACTIVE_MAIN_INDEX = "active_main_index"
 DEFAULT_INPUT = "default_input"
+LIST_ITEMS = "list_items"
 
 
 # this might not be needed anymore in many cases, because
@@ -1469,6 +1470,38 @@ class ColorManagedViewSettingsExporter(
         # https://github.com/Algebraic-UG/tree_clipper/issues/96
         data.pop(WHITE_BALANCE_WHITEPOINT)
         return data
+
+
+class FieldToListExporter(SpecificExporter[bpy.types.GeometryNodeFieldToList]):
+    def serialize(self):
+        return self.export_all_simple_writable_properties_and_list(
+            [INPUTS, OUTPUTS, BL_IDNAME, LIST_ITEMS],
+            [PARENT],
+        )
+
+
+class FieldToListImporter(SpecificImporter[bpy.types.GeometryNodeFieldToList]):
+    def deserialize(self):
+        self.import_all_simple_writable_properties_and_list(
+            # ordering is important, the list_items implicitly create sockets
+            [LIST_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS]
+        )
+
+
+class FieldToListItemExporter(SpecificExporter[bpy.types.GeometryNodeFieldToListItem]):
+    def serialize(self):
+        return self.export_all_simple_writable_properties()
+
+
+class FieldToGridItemsImporter(
+    SpecificImporter[bpy.types.GeometryNodeFieldToListItems]
+):
+    def deserialize(self):
+        self.getter().clear()
+        for item in self.serialization[ITEMS]:
+            socket_type = item[DATA][SOCKET_TYPE]
+            name = item[DATA][NAME]
+            self.getter().new(name=name, socket_type=socket_type)
 
 
 # now they are cooked and ready to use ~ bon appétit
