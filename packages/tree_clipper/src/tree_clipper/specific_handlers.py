@@ -93,6 +93,8 @@ ACTIVE_GENERATION_INDEX = "active_generation_index"
 ACTIVE_MAIN_INDEX = "active_main_index"
 DEFAULT_INPUT = "default_input"
 LIST_ITEMS = "list_items"
+ADD = "add"
+REMOVE = "remove"
 
 
 # this might not be needed anymore in many cases, because
@@ -1502,6 +1504,30 @@ class FieldToGridItemsImporter(
             socket_type = item[DATA][SOCKET_TYPE]
             name = item[DATA][NAME]
             self.getter().new(name=name, socket_type=socket_type)
+
+
+class CryptomatteExporter(SpecificExporter[bpy.types.CompositorNodeCryptomatte]):
+    def serialize(self):
+        data = self.export_all_simple_writable_properties_and_list(
+            [INPUTS, OUTPUTS, BL_IDNAME],
+            [PARENT],
+        )
+        # https://github.com/Algebraic-UG/tree_clipper/issues/165
+        data.pop(ADD)
+        data.pop(REMOVE)
+        return data
+
+
+class CryptomatteV2Exporter(SpecificExporter[bpy.types.CompositorNodeCryptomatteV2]):
+    def serialize(self):
+        data = self.export_all_simple_writable_properties_and_list(
+            [INPUTS, OUTPUTS, BL_IDNAME, ENTRIES],
+            [PARENT, IMAGE, SCENE],
+        )
+        # https://github.com/Algebraic-UG/tree_clipper/issues/165
+        data.pop(ADD)
+        data.pop(REMOVE)
+        return data
 
 
 # now they are cooked and ready to use ~ bon appétit
