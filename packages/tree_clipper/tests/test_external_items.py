@@ -57,7 +57,7 @@ def _create_setup():
     node.text = _EXTERNAL_ITEM_MAKER["Text"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
 
     node = nodes.new("GeometryNodeStringToCurves")
-    node.font = _EXTERNAL_ITEM_MAKER["VectorFont"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
+    node.inputs["Font"].default_value = _EXTERNAL_ITEM_MAKER["VectorFont"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
 
     return name
 
@@ -127,7 +127,7 @@ def _check_after_import(name: str):
     assert tree.nodes["Material"].material is not None  # ty: ignore[unresolved-attribute]
     assert tree.nodes["Object"].object is not None  # ty: ignore[unresolved-attribute]
     assert tree.nodes["Collection"].collection is not None  # ty: ignore[unresolved-attribute]
-    assert tree.nodes["String to Curves"].font is not None  # ty: ignore[unresolved-attribute]
+    assert tree.nodes["String to Curves"].inputs["Font"].default_value is not None  # ty: ignore[unresolved-attribute]
     assert len(tree.nodes) == 7, "if this fails the lines above must also change"
 
 
