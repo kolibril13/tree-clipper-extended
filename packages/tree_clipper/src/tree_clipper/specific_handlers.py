@@ -7,6 +7,7 @@ from .specific_abstract import (
     _BUILT_IN_IMPORTER,
     SpecificExporter,
     SpecificImporter,
+    default_serializer,
 )
 
 from .common import (
@@ -95,6 +96,11 @@ DEFAULT_INPUT = "default_input"
 LIST_ITEMS = "list_items"
 ADD = "add"
 REMOVE = "remove"
+FONT = "font"
+OVERFLOW = "overflow"
+ALIGN_X = "align_x"
+ALIGN_Y = "align_y"
+PIVOT_MODE = "pivot_mode"
 
 
 # this might not be needed anymore in many cases, because
@@ -1472,60 +1478,62 @@ class ColorManagedViewSettingsExporter(
         return data
 
 
-class FieldToListExporter(SpecificExporter[bpy.types.GeometryNodeFieldToList]):
-    def serialize(self):
-        return self.export_all_simple_writable_properties_and_list(
-            [INPUTS, OUTPUTS, BL_IDNAME, LIST_ITEMS],
-            [PARENT],
-        )
+if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 1) or bpy.app.version[0] > 5:
 
+    class FieldToListExporter(SpecificExporter[bpy.types.GeometryNodeFieldToList]):
+        def serialize(self):
+            return self.export_all_simple_writable_properties_and_list(
+                [INPUTS, OUTPUTS, BL_IDNAME, LIST_ITEMS],
+                [PARENT],
+            )
 
-class FieldToListImporter(SpecificImporter[bpy.types.GeometryNodeFieldToList]):
-    def deserialize(self):
-        self.import_all_simple_writable_properties_and_list(
-            # ordering is important, the list_items implicitly create sockets
-            [LIST_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS]
-        )
+    class FieldToListImporter(SpecificImporter[bpy.types.GeometryNodeFieldToList]):
+        def deserialize(self):
+            self.import_all_simple_writable_properties_and_list(
+                # ordering is important, the list_items implicitly create sockets
+                [LIST_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS]
+            )
+            _import_node_parent(self)
 
+    class FieldToListItemExporter(
+        SpecificExporter[bpy.types.GeometryNodeFieldToListItem]
+    ):
+        def serialize(self):
+            return self.export_all_simple_writable_properties()
 
-class FieldToListItemExporter(SpecificExporter[bpy.types.GeometryNodeFieldToListItem]):
-    def serialize(self):
-        return self.export_all_simple_writable_properties()
+    class FieldToListItemsImporter(
+        SpecificImporter[bpy.types.GeometryNodeFieldToListItems]
+    ):
+        def deserialize(self):
+            self.getter().clear()
+            for item in self.serialization[ITEMS]:
+                socket_type = item[DATA][SOCKET_TYPE]
+                name = item[DATA][NAME]
+                self.getter().new(name=name, socket_type=socket_type)
 
+    class CryptomatteExporter(SpecificExporter[bpy.types.CompositorNodeCryptomatte]):
+        def serialize(self):
+            data = self.export_all_simple_writable_properties_and_list(
+                [INPUTS, OUTPUTS, BL_IDNAME],
+                [PARENT],
+            )
+            # https://github.com/Algebraic-UG/tree_clipper/issues/165
+            data.pop(ADD)
+            data.pop(REMOVE)
+            return data
 
-class FieldToListItemsImporter(
-    SpecificImporter[bpy.types.GeometryNodeFieldToListItems]
-):
-    def deserialize(self):
-        self.getter().clear()
-        for item in self.serialization[ITEMS]:
-            socket_type = item[DATA][SOCKET_TYPE]
-            name = item[DATA][NAME]
-            self.getter().new(name=name, socket_type=socket_type)
-
-
-class CryptomatteExporter(SpecificExporter[bpy.types.CompositorNodeCryptomatte]):
-    def serialize(self):
-        data = self.export_all_simple_writable_properties_and_list(
-            [INPUTS, OUTPUTS, BL_IDNAME],
-            [PARENT],
-        )
-        # https://github.com/Algebraic-UG/tree_clipper/issues/165
-        data.pop(ADD)
-        data.pop(REMOVE)
-        return data
-
-
-class CryptomatteV2Exporter(SpecificExporter[bpy.types.CompositorNodeCryptomatteV2]):
-    def serialize(self):
-        data = self.export_all_simple_writable_properties_and_list(
-            [INPUTS, OUTPUTS, BL_IDNAME, ENTRIES],
-            [PARENT, IMAGE, SCENE],
-        )
-        # https://github.com/Algebraic-UG/tree_clipper/issues/165
-        data.pop(ADD)
-        data.pop(REMOVE)
-        return data
+    class CryptomatteV2Exporter(
+        SpecificExporter[bpy.types.CompositorNodeCryptomatteV2]
+    ):
+        def serialize(self):
+            data = self.export_all_simple_writable_properties_and_list(
+                [INPUTS, OUTPUTS, BL_IDNAME, ENTRIES],
+                [PARENT, IMAGE, SCENE],
+            )
+            # https://github.com/Algebraic-UG/tree_clipper/issues/165
+            data.pop(ADD)
+            data.pop(REMOVE)
+            return data
 
 
 # now they are cooked and ready to use ~ bon appétit
