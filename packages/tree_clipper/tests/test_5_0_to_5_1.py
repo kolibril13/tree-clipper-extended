@@ -1,8 +1,5 @@
 import bpy
 
-from pathlib import Path
-import json
-
 from .util import (
     save_failed,
     BACKWARDS_COMPATIBILITY_FILES_DIR,

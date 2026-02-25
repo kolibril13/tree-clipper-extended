@@ -137,7 +137,7 @@ def round_trip(
         export_intermediate.set_external(
             (
                 external_id,
-                external_item.pointed_to_by.get_pointee().name,  # ty: ignore[possibly-missing-attribute]
+                external_item.pointed_to_by.get_pointee().name,
             )
             for external_id, external_item in export_intermediate.get_external().items()
         )
@@ -156,7 +156,7 @@ def round_trip(
         assert isinstance(fixed_type_name, str)
         data_block = get_data_block_from_id_name(fixed_type_name)
         name = external_item[EXTERNAL_DESCRIPTION]
-        return data_block[name]  # ty: ignore[invalid-argument-type]
+        return data_block[name]
 
     import_intermediate.set_external(
         (int(external_id), get_same_external_item(external_item))
@@ -171,7 +171,7 @@ def round_trip(
     )
 
     after = export_to_string(
-        import_report.rename_material[1]  # ty:ignore[non-subscriptable]
+        import_report.rename_material[1]  # ty:ignore[not-subscriptable]
         if is_material
         else import_report.renames_node_group[original_name]
     )

@@ -7,7 +7,6 @@ from .specific_abstract import (
     _BUILT_IN_IMPORTER,
     SpecificExporter,
     SpecificImporter,
-    default_serializer,
 )
 
 from .common import (
