@@ -23,7 +23,7 @@ def pytest_generate_tests(metafunc):
     )
 
     if (
-        metafunc == test_all_nodes
+        metafunc.function == test_all_nodes
         or metafunc.function.__name__ == test_all_nodes.__name__
     ):
         metafunc.parametrize("node_type", node_types)

@@ -1536,6 +1536,95 @@ if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 1) or bpy.app.version[0] >
             data.pop(REMOVE)
             return data
 
+    class StringToCurvesImporter(
+        SpecificImporter[bpy.types.GeometryNodeStringToCurves]
+    ):
+        def deserialize(self):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/167
+            if self.importer.blender_version[:2] == [5, 0]:
+                # we have to skip the INPUTS/OUTPUTS collection importers because
+                # the number of sockets has changed between versions
+                self.import_all_simple_writable_properties_and_list([])
+                _import_node_parent(self)
+
+                # this might not be needed, but nice to have all the getters
+                self.only_create_getters([INPUTS, OUTPUTS])
+
+                # this will probably move somwhere else as soon as we need it twice
+                def map_socket(socket_name, input):
+                    old_socket = next(
+                        (
+                            old
+                            for old in self.serialization[INPUTS if input else OUTPUTS][
+                                DATA
+                            ][ITEMS]
+                            if old[DATA][NAME] == socket_name
+                        ),
+                        None,
+                    )
+                    assert old_socket is not None, f"Missing old socket {socket_name}"
+                    if input:
+                        self.register_getter(
+                            getter=lambda: self.getter().inputs[socket_name],
+                            serialization=old_socket,
+                            from_root=self.from_root.add(
+                                f"Mapped input '{socket_name}'"
+                            ),
+                        )
+                    else:
+                        self.register_getter(
+                            getter=lambda: self.getter().outputs[socket_name],
+                            serialization=old_socket,
+                            from_root=self.from_root.add(
+                                f"Mapped output '{socket_name}'"
+                            ),
+                        )
+
+                # allow conneting the old links
+                map_socket("String", True)
+                map_socket("Size", True)
+                map_socket("Character Spacing", True)
+                map_socket("Word Spacing", True)
+                map_socket("Line Spacing", True)
+                map_socket("Text Box Width", True)
+                map_socket("Text Box Height", True)
+
+                map_socket("Curve Instances", False)
+                map_socket("Line", False)
+                map_socket("Pivot Point", False)
+
+                # map node attributes to default socket values
+                font = self.importer.getters.get(self.serialization[FONT])
+                if font is not None:
+                    font = font()
+                self.getter().inputs["Font"].default_value = font
+
+                # these menu values need to be mapped from
+                # BOTTOM_BASELINE to Bottom Baseline
+                def map_menu_value(old: str):
+                    return old.replace("_", " ").title()
+
+                self.getter().inputs["Overflow"].default_value = map_menu_value(
+                    self.serialization[OVERFLOW]
+                )
+                self.getter().inputs["Align X"].default_value = map_menu_value(
+                    self.serialization[ALIGN_X]
+                )
+                self.getter().inputs["Align Y"].default_value = map_menu_value(
+                    self.serialization[ALIGN_Y]
+                )
+                self.getter().inputs["Pivot Point"].default_value = map_menu_value(
+                    self.serialization[PIVOT_MODE]
+                )
+
+                return
+
+            self.import_all_simple_writable_properties_and_list(
+                # ordering is important, the list_items implicitly create sockets
+                [INPUTS, OUTPUTS]
+            )
+            _import_node_parent(self)
+
 
 # now they are cooked and ready to use ~ bon appétit
 BUILT_IN_EXPORTER = _BUILT_IN_EXPORTER
