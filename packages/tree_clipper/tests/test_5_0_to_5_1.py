@@ -1,7 +1,6 @@
 import bpy
 
 from pathlib import Path
-import deepdiff
 import json
 
 from .util import (

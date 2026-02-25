@@ -22,17 +22,13 @@ from tree_clipper.specific_handlers import BUILT_IN_EXPORTER, BUILT_IN_IMPORTER
 
 def make_test_object() -> bpy.types.Object:
     obj = bpy.data.objects.new(name="test", object_data=None)
-    bpy.context.scene.collection.objects.link(  # ty :ignore[possibly-missing-attribute]
-        obj
-    )
+    bpy.context.scene.collection.objects.link(obj)
     return obj
 
 
 def make_test_collection() -> bpy.types.Collection:
     collection = bpy.data.collections.new(name="test")
-    bpy.context.scene.collection.children.link(  # ty :ignore[possibly-missing-attribute]
-        collection
-    )
+    bpy.context.scene.collection.children.link(collection)
     return collection
 
 
@@ -220,7 +216,7 @@ def import_and_check_export(
         name = import_intermediate.data[MATERIAL_NAME]
     else:
         is_material = False
-        name = import_report.last_getter().name  # ty:ignore[unresolved-attribute, call-non-callable]
+        name = import_report.last_getter().name
 
     export_intermediate = ExportIntermediate(
         parameters=ExportParameters(

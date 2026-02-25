@@ -1,5 +1,5 @@
 import bpy
-import _rna_info as rna_info  # ty:ignore[unresolved-import]
+import _rna_info as rna_info
 
 import pytest
 
