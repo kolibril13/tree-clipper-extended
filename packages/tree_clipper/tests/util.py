@@ -189,6 +189,24 @@ def make_everything_local():
             material.make_local(clear_liboverride=True)
 
 
+def import_and_check(*, import_file: Path, debug_prints: bool = False):
+    import_intermediate = ImportIntermediate(file_path=import_file)
+
+    import_intermediate.set_external(
+        (int(external_id), None)
+        for external_id, _ in import_intermediate.get_external().items()
+    )
+
+    import_report = import_intermediate.import_all(
+        parameters=ImportParameters(
+            specific_handlers=BUILT_IN_IMPORTER,
+            debug_prints=debug_prints,
+        )
+    )
+
+    assert len(import_report.warnings) == 0
+
+
 def import_and_check_export(
     *,
     import_file: Path,
