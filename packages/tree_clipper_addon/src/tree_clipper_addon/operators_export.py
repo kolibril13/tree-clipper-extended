@@ -1,3 +1,4 @@
+from tree_clipper.common import DEFAULT_HINT
 import bpy
 
 from typing import Any, TYPE_CHECKING
@@ -140,7 +141,7 @@ class SCENE_UL_Tree_Clipper_External_Export_List(bpy.types.UIList):
 
 class Tree_Clipper_External_Export_Item(bpy.types.PropertyGroup):
     external_id: bpy.props.IntProperty()  # type: ignore
-    description: bpy.props.StringProperty(name="", default="Hint for Import")  # type: ignore
+    description: bpy.props.StringProperty(name="", default=DEFAULT_HINT)  # type: ignore
     skip: bpy.props.BoolProperty(name="Hide in Import", default=False)  # type: ignore
 
 

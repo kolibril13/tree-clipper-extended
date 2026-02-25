@@ -12,6 +12,7 @@ from tree_clipper.common import (
     MATERIAL_NAME,
     TREES,
     NAME,
+    DEFAULT_HINT,
 )
 from tree_clipper.id_data_getter import get_data_block_from_id_name
 from tree_clipper.export_nodes import ExportIntermediate, ExportParameters
