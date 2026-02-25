@@ -193,7 +193,69 @@ def make_everything_local():
             material.make_local(clear_liboverride=True)
 
 
+def import_and_check_export(
+    *,
+    import_file: Path,
+    export_file: Path,
+    debug_prints: bool = False,
+):
+    import_intermediate = ImportIntermediate(file_path=import_file)
+
+    import_intermediate.set_external(
+        (int(external_id), None)
+        for external_id, _ in import_intermediate.get_external().items()
+    )
+
+    import_report = import_intermediate.import_all(
+        parameters=ImportParameters(
+            specific_handlers=BUILT_IN_IMPORTER,
+            debug_prints=debug_prints,
+        )
+    )
+
+    assert len(import_report.warnings) == 0
+
+    if MATERIAL_NAME in import_intermediate.data:
+        is_material = True
+        name = import_intermediate.data[MATERIAL_NAME]
+    else:
+        is_material = False
+        name = import_report.last_getter().name  # ty:ignore[unresolved-attribute, call-non-callable]
+
+    export_intermediate = ExportIntermediate(
+        parameters=ExportParameters(
+            is_material=is_material,
+            name=name,
+            specific_handlers=BUILT_IN_EXPORTER,
+            export_sub_trees=True,
+            debug_prints=debug_prints,
+            write_from_roots=False,
+        )
+    )
+
+    while export_intermediate.step():
+        pass
+
+    export_intermediate.set_external(
+        (external_id, DEFAULT_HINT)
+        for external_id, external_item in export_intermediate.get_external().items()
+    )
+
+    string = export_intermediate.export_to_str(compress=False, json_indent=4)
+
+    with open(export_file, "r") as f:
+        expected_string = f.read()
+
+    diff = deepdiff.DeepDiff(
+        json.loads(expected_string), json.loads(string), math_epsilon=0.01
+    )
+
+    print(diff.pretty())
+    assert diff == {}
+
+
 BINARY_BLEND_FILES_DIR = Path(__file__).parent / "binary_blend_files"
+BACKWARDS_COMPATIBILITY_FILES_DIR = Path(__file__).parent / "backwards_compatibility"
 
 
 def all_subclasses(cls):
