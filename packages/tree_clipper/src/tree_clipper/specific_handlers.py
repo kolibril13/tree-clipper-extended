@@ -1646,6 +1646,25 @@ if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 1) or bpy.app.version[0] >
             self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
             _import_node_parent(self)
 
+    class PackUVIslandsImporter(SpecificImporter[bpy.types.GeometryNodeUVPackIslands]):
+        def deserialize(self):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/169
+            if self.importer.blender_version[:2] == [5, 0]:
+                self.import_all_simple_writable_properties_and_list([OUTPUTS])
+                # this might not be needed, but nice to have all the getters
+                self.only_create_getters([INPUTS])
+
+                map_socket_input(importer=self, name="UV")
+                map_socket_input(importer=self, name="Selection")
+                map_socket_input(importer=self, name="Margin")
+                map_socket_input(importer=self, name="Rotate")
+                map_socket_input(importer=self, name="Method")
+
+                return
+
+            self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+            _import_node_parent(self)
+
 
 # now they are cooked and ready to use ~ bon appétit
 BUILT_IN_EXPORTER = _BUILT_IN_EXPORTER
