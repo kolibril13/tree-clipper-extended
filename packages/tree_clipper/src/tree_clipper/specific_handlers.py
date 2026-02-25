@@ -1416,6 +1416,7 @@ class FieldToGridImporter(SpecificImporter[bpy.types.GeometryNodeFieldToGrid]):
             # ordering is important, the grid_items implicitly create sockets
             [GRID_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS]
         )
+        _import_node_parent(self)
 
 
 class FieldToGridItemExporter(SpecificExporter[bpy.types.GeometryNodeFieldToGridItem]):
