@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 from pathlib import Path
 
-from ._vendor.tree_clipper.common import DEFAULT_FILE
+from ._vendor.tree_clipper.common import DEFAULT_FILE, DEFAULT_HINT
 
 from ._vendor.tree_clipper.specific_handlers import (
     BUILT_IN_EXPORTER,
@@ -140,7 +140,7 @@ class SCENE_UL_Tree_Clipper_External_Export_List(bpy.types.UIList):
 
 class Tree_Clipper_External_Export_Item(bpy.types.PropertyGroup):
     external_id: bpy.props.IntProperty()  # type: ignore
-    description: bpy.props.StringProperty(name="", default="Hint for Import")  # type: ignore
+    description: bpy.props.StringProperty(name="", default=DEFAULT_HINT)  # type: ignore
     skip: bpy.props.BoolProperty(name="Hide in Import", default=False)  # type: ignore
 
 

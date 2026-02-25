@@ -92,6 +92,14 @@ ACTIVE_OUTPUT_INDEX = "active_output_index"
 ACTIVE_GENERATION_INDEX = "active_generation_index"
 ACTIVE_MAIN_INDEX = "active_main_index"
 DEFAULT_INPUT = "default_input"
+LIST_ITEMS = "list_items"
+ADD = "add"
+REMOVE = "remove"
+FONT = "font"
+OVERFLOW = "overflow"
+ALIGN_X = "align_x"
+ALIGN_Y = "align_y"
+PIVOT_MODE = "pivot_mode"
 
 
 # this might not be needed anymore in many cases, because
@@ -116,6 +124,41 @@ def _import_node_parent(specific_importer: SpecificImporter) -> None:
         ]()  # ty: ignore[invalid-assignment]
 
     specific_importer.importer.defer_after_nodes_before_links.append(deferred)
+
+
+# This is needed for manually mapping sockets for backwards compatibility
+def map_socket(*, specific_importer: SpecificImporter, socket_name: str, input: bool):
+    old_socket = next(
+        (
+            old
+            for old in specific_importer.serialization[INPUTS if input else OUTPUTS][
+                DATA
+            ][ITEMS]
+            if old[DATA][NAME] == socket_name
+        ),
+        None,
+    )
+    assert old_socket is not None, f"Missing old socket {socket_name}"
+    if input:
+        specific_importer.importer._import_obj(
+            getter=lambda: specific_importer.getter().inputs[socket_name],
+            serialization=old_socket,
+            from_root=specific_importer.from_root.add(f"Mapped input '{socket_name}'"),
+        )
+    else:
+        specific_importer.importer._import_obj(
+            getter=lambda: specific_importer.getter().outputs[socket_name],
+            serialization=old_socket,
+            from_root=specific_importer.from_root.add(f"Mapped output '{socket_name}'"),
+        )
+
+
+def map_socket_input(*, importer: SpecificImporter, name: str):
+    map_socket(specific_importer=importer, socket_name=name, input=True)
+
+
+def map_socket_output(*, importer: SpecificImporter, name: str):
+    map_socket(specific_importer=importer, socket_name=name, input=False)
 
 
 # Possible socket data types: https://docs.blender.org/api/current/bpy_types_enum_items/node_socket_data_type_items.html#rna-enum-node-socket-data-type-items
@@ -1407,8 +1450,7 @@ class FieldToGridImporter(SpecificImporter[bpy.types.GeometryNodeFieldToGrid]):
             # ordering is important, the grid_items implicitly create sockets
             [GRID_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS]
         )
-
-        return super().deserialize()
+        _import_node_parent(self)
 
 
 class FieldToGridItemExporter(SpecificExporter[bpy.types.GeometryNodeFieldToGridItem]):
@@ -1469,6 +1511,175 @@ class ColorManagedViewSettingsExporter(
         # https://github.com/Algebraic-UG/tree_clipper/issues/96
         data.pop(WHITE_BALANCE_WHITEPOINT)
         return data
+
+
+if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 1) or bpy.app.version[0] > 5:
+
+    class FieldToListExporter(SpecificExporter[bpy.types.GeometryNodeFieldToList]):
+        def serialize(self):
+            return self.export_all_simple_writable_properties_and_list(
+                [INPUTS, OUTPUTS, BL_IDNAME, LIST_ITEMS],
+                [PARENT],
+            )
+
+    class FieldToListImporter(SpecificImporter[bpy.types.GeometryNodeFieldToList]):
+        def deserialize(self):
+            self.import_all_simple_writable_properties_and_list(
+                # ordering is important, the list_items implicitly create sockets
+                [LIST_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS]
+            )
+            _import_node_parent(self)
+
+    class FieldToListItemExporter(
+        SpecificExporter[bpy.types.GeometryNodeFieldToListItem]
+    ):
+        def serialize(self):
+            return self.export_all_simple_writable_properties()
+
+    class FieldToListItemsImporter(
+        SpecificImporter[bpy.types.GeometryNodeFieldToListItems]
+    ):
+        def deserialize(self):
+            self.getter().clear()
+            for item in self.serialization[ITEMS]:
+                socket_type = item[DATA][SOCKET_TYPE]
+                name = item[DATA][NAME]
+                self.getter().new(name=name, socket_type=socket_type)
+
+    class CryptomatteExporter(SpecificExporter[bpy.types.CompositorNodeCryptomatte]):
+        def serialize(self):
+            data = self.export_all_simple_writable_properties_and_list(
+                [INPUTS, OUTPUTS, BL_IDNAME],
+                [PARENT],
+            )
+            # https://github.com/Algebraic-UG/tree_clipper/issues/165
+            data.pop(ADD)
+            data.pop(REMOVE)
+            return data
+
+    class CryptomatteV2Exporter(
+        SpecificExporter[bpy.types.CompositorNodeCryptomatteV2]
+    ):
+        def serialize(self):
+            data = self.export_all_simple_writable_properties_and_list(
+                [INPUTS, OUTPUTS, BL_IDNAME, ENTRIES],
+                [PARENT, IMAGE, SCENE],
+            )
+            # https://github.com/Algebraic-UG/tree_clipper/issues/165
+            data.pop(ADD)
+            data.pop(REMOVE)
+            return data
+
+    class StringToCurvesImporter(
+        SpecificImporter[bpy.types.GeometryNodeStringToCurves]
+    ):
+        def deserialize(self):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/167
+            if self.importer.blender_version[:2] == [5, 0]:
+                # we have to skip the INPUTS/OUTPUTS collection importers because
+                # the number of sockets has changed between versions
+                self.import_all_simple_writable_properties_and_list([])
+                _import_node_parent(self)
+
+                # this might not be needed, but nice to have all the getters
+                self.only_create_getters([INPUTS, OUTPUTS])
+
+                # allow conneting the old links
+                map_socket_input(importer=self, name="String")
+                map_socket_input(importer=self, name="Size")
+                map_socket_input(importer=self, name="Character Spacing")
+                map_socket_input(importer=self, name="Word Spacing")
+                map_socket_input(importer=self, name="Line Spacing")
+                map_socket_input(importer=self, name="Text Box Width")
+                map_socket_input(importer=self, name="Text Box Height")
+
+                map_socket_output(importer=self, name="Curve Instances")
+                map_socket_output(importer=self, name="Line")
+                map_socket_output(importer=self, name="Pivot Point")
+
+                # map node attributes to default socket values
+                font = self.importer.getters.get(self.serialization[FONT])
+                if font is not None:
+                    font = font()
+                self.getter().inputs["Font"].default_value = font
+
+                # these menu values need to be mapped from
+                # BOTTOM_BASELINE to Bottom Baseline
+                def map_menu_value(old: str):
+                    return old.replace("_", " ").title()
+
+                self.getter().inputs["Overflow"].default_value = map_menu_value(
+                    self.serialization[OVERFLOW]
+                )
+                self.getter().inputs["Align X"].default_value = map_menu_value(
+                    self.serialization[ALIGN_X]
+                )
+                self.getter().inputs["Align Y"].default_value = map_menu_value(
+                    self.serialization[ALIGN_Y]
+                )
+                self.getter().inputs["Pivot Point"].default_value = map_menu_value(
+                    self.serialization[PIVOT_MODE]
+                )
+
+                return
+
+            self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+            _import_node_parent(self)
+
+    class UVUnwrapImporter(SpecificImporter[bpy.types.GeometryNodeUVUnwrap]):
+        def deserialize(self):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/168
+            if self.importer.blender_version[:2] == [5, 0]:
+                self.import_all_simple_writable_properties_and_list([OUTPUTS])
+                # this might not be needed, but nice to have all the getters
+                self.only_create_getters([INPUTS])
+
+                map_socket_input(importer=self, name="Selection")
+                map_socket_input(importer=self, name="Seam")
+                map_socket_input(importer=self, name="Margin")
+                map_socket_input(importer=self, name="Fill Holes")
+                map_socket_input(importer=self, name="Method")
+
+                return
+
+            self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+            _import_node_parent(self)
+
+    class PackUVIslandsImporter(SpecificImporter[bpy.types.GeometryNodeUVPackIslands]):
+        def deserialize(self):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/169
+            if self.importer.blender_version[:2] == [5, 0]:
+                self.import_all_simple_writable_properties_and_list([OUTPUTS])
+                # this might not be needed, but nice to have all the getters
+                self.only_create_getters([INPUTS])
+
+                map_socket_input(importer=self, name="UV")
+                map_socket_input(importer=self, name="Selection")
+                map_socket_input(importer=self, name="Margin")
+                map_socket_input(importer=self, name="Rotate")
+                map_socket_input(importer=self, name="Method")
+
+                return
+
+            self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+            _import_node_parent(self)
+
+    class FillCurveImporter(SpecificImporter[bpy.types.GeometryNodeFillCurve]):
+        def deserialize(self):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/170
+            if self.importer.blender_version[:2] == [5, 0]:
+                self.import_all_simple_writable_properties_and_list([OUTPUTS])
+                # this might not be needed, but nice to have all the getters
+                self.only_create_getters([INPUTS])
+
+                map_socket_input(importer=self, name="Curve")
+                map_socket_input(importer=self, name="Group ID")
+                map_socket_input(importer=self, name="Mode")
+
+                return
+
+            self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+            _import_node_parent(self)
 
 
 # now they are cooked and ready to use ~ bon appétit

@@ -275,6 +275,30 @@ class SpecificImporter(Generic[AssumedType], ABC):
         self.import_all_simple_writable_properties()
         self.import_properties_from_id_list(id_list)
 
+    def only_create_getters(self, id_list: list[str]):
+        for identifier in id_list:
+            self.register_getter(
+                getter=lambda: getattr(self.getter(), identifier),
+                serialization=self.serialization[identifier],
+                from_root=self.from_root.add_prop(
+                    self.getter().bl_rna.properties[identifier]
+                ),
+            )
+
+    def register_getter(
+        self,
+        *,
+        getter: GETTER,
+        serialization: dict[str, Any],
+        from_root,
+    ):
+        self.importer._import_obj_with_deserializer(
+            getter=getter,
+            serialization=serialization,
+            deserializer=default_deserializer,
+            from_root=from_root,
+        )
+
     @abstractmethod
     def deserialize(self) -> None:
         """Do the actual importing here"""

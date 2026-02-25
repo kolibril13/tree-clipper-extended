@@ -148,3 +148,4 @@ SIMPLE_PROP_TYPE_TUPLE = (
 EXTERNAL_SERIALIZATION = dict[str, int | str | None]
 
 DEFAULT_FILE = str(Path(tempfile.gettempdir()) / "default.json")
+DEFAULT_HINT = "Hint for Import"

@@ -1,10 +1,11 @@
 import bpy
-import _rna_info as rna_info  # ty:ignore[unresolved-import]
+import _rna_info as rna_info
 
 import pytest
 
-from .util import all_subclasses
+from .util import all_subclasses, BACKWARDS_COMPATIBILITY_FILES_DIR
 from .test_all_nodes import test_all_nodes
+from .test_backwards_compatibility import test_backwards_compatibility_to_0_1_1
 
 
 @pytest.fixture(autouse=True)
@@ -24,3 +25,10 @@ def pytest_generate_tests(metafunc):
 
     if metafunc.function == test_all_nodes:
         metafunc.parametrize("node_type", node_types)
+
+    exports_from_0_1_1 = [
+        str(p) for p in (BACKWARDS_COMPATIBILITY_FILES_DIR / "v0.1.1").rglob("*.json")
+    ]
+
+    if metafunc.function == test_backwards_compatibility_to_0_1_1:
+        metafunc.parametrize("file", exports_from_0_1_1)

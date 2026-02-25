@@ -67,10 +67,14 @@ class ImportReport:
 class Importer:
     def __init__(
         self,
+        *,
+        blender_version: list[int],
         specific_handlers: dict[type, DESERIALIZER],
         getters: dict[int, GETTER],
         debug_prints: bool,
     ) -> None:
+        self.blender_version = blender_version
+
         self.specific_handlers = specific_handlers
         self.getters = getters
         self.debug_prints = debug_prints
@@ -498,10 +502,15 @@ From root: {from_root.to_str()}"""
 
 
 def _check_version(data: dict) -> None:
-    exporter_blender_version = data[BLENDER_VERSION]
-    importer_blender_version = bpy.app.version_string
+    exporter_blender_version = [
+        int(v) for v in data[BLENDER_VERSION].split(" ")[0].split(".")
+    ]
+    importer_blender_version = bpy.app.version
 
-    if exporter_blender_version != importer_blender_version:
+    if (
+        exporter_blender_version[0] != importer_blender_version[0]
+        or exporter_blender_version[1] > importer_blender_version[1]
+    ):
         raise RuntimeError(
             f"Blender version mismatch. File version: {exporter_blender_version}, but running {importer_blender_version}"
         )
@@ -586,7 +595,7 @@ class ImportIntermediate:
 
     def set_external(
         self,
-        ids_and_references: Iterator[Tuple[int, bpy.types.ID]],
+        ids_and_references: Iterator[Tuple[int, bpy.types.ID | None]],
     ) -> None:
         for external_id, external_item in ids_and_references:
             scene_id = self.get_external()[str(external_id)][EXTERNAL_SCENE_ID]
@@ -620,11 +629,18 @@ class ImportIntermediate:
                 assert int(external_id) in self.getters
 
     def start_import(self, parameters: ImportParameters) -> None:
+        version_cycle = self.data[BLENDER_VERSION].split(" ")
+        blender_version = [int(v) for v in version_cycle[0].split(".")]
         self.importer = Importer(
+            blender_version=blender_version,
             specific_handlers=parameters.specific_handlers,
             getters=self.getters,
             debug_prints=parameters.debug_prints,
         )
+        if len(version_cycle) > 1:
+            self.importer.report.warnings.append(
+                f"This was exported from a Blender {version_cycle[1]} version."
+            )
 
     def step(self) -> bool:
         assert isinstance(self.importer, Importer)

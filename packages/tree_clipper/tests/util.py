@@ -12,6 +12,7 @@ from tree_clipper.common import (
     MATERIAL_NAME,
     TREES,
     NAME,
+    DEFAULT_HINT,
 )
 from tree_clipper.id_data_getter import get_data_block_from_id_name
 from tree_clipper.export_nodes import ExportIntermediate, ExportParameters
@@ -21,17 +22,13 @@ from tree_clipper.specific_handlers import BUILT_IN_EXPORTER, BUILT_IN_IMPORTER
 
 def make_test_object() -> bpy.types.Object:
     obj = bpy.data.objects.new(name="test", object_data=None)
-    bpy.context.scene.collection.objects.link(  # ty :ignore[possibly-missing-attribute]
-        obj
-    )
+    bpy.context.scene.collection.objects.link(obj)
     return obj
 
 
 def make_test_collection() -> bpy.types.Collection:
     collection = bpy.data.collections.new(name="test")
-    bpy.context.scene.collection.children.link(  # ty :ignore[possibly-missing-attribute]
-        collection
-    )
+    bpy.context.scene.collection.children.link(collection)
     return collection
 
 
@@ -140,7 +137,7 @@ def round_trip(
         export_intermediate.set_external(
             (
                 external_id,
-                external_item.pointed_to_by.get_pointee().name,  # ty: ignore[possibly-missing-attribute]
+                external_item.pointed_to_by.get_pointee().name,
             )
             for external_id, external_item in export_intermediate.get_external().items()
         )
@@ -159,7 +156,7 @@ def round_trip(
         assert isinstance(fixed_type_name, str)
         data_block = get_data_block_from_id_name(fixed_type_name)
         name = external_item[EXTERNAL_DESCRIPTION]
-        return data_block[name]  # ty: ignore[invalid-argument-type]
+        return data_block[name]
 
     import_intermediate.set_external(
         (int(external_id), get_same_external_item(external_item))
@@ -174,7 +171,7 @@ def round_trip(
     )
 
     after = export_to_string(
-        import_report.rename_material[1]  # ty:ignore[non-subscriptable]
+        import_report.rename_material[1]  # ty:ignore[not-subscriptable]
         if is_material
         else import_report.renames_node_group[original_name]
     )
@@ -192,7 +189,87 @@ def make_everything_local():
             material.make_local(clear_liboverride=True)
 
 
+def import_and_check(*, import_file: Path, debug_prints: bool = False):
+    import_intermediate = ImportIntermediate(file_path=import_file)
+
+    import_intermediate.set_external(
+        (int(external_id), None)
+        for external_id, _ in import_intermediate.get_external().items()
+    )
+
+    import_report = import_intermediate.import_all(
+        parameters=ImportParameters(
+            specific_handlers=BUILT_IN_IMPORTER,
+            debug_prints=debug_prints,
+        )
+    )
+
+    assert len(import_report.warnings) == 0
+
+
+def import_and_check_export(
+    *,
+    import_file: Path,
+    export_file: Path,
+    debug_prints: bool = False,
+):
+    import_intermediate = ImportIntermediate(file_path=import_file)
+
+    import_intermediate.set_external(
+        (int(external_id), None)
+        for external_id, _ in import_intermediate.get_external().items()
+    )
+
+    import_report = import_intermediate.import_all(
+        parameters=ImportParameters(
+            specific_handlers=BUILT_IN_IMPORTER,
+            debug_prints=debug_prints,
+        )
+    )
+
+    assert len(import_report.warnings) == 0
+
+    if MATERIAL_NAME in import_intermediate.data:
+        is_material = True
+        name = import_intermediate.data[MATERIAL_NAME]
+    else:
+        is_material = False
+        name = import_report.last_getter().name
+
+    export_intermediate = ExportIntermediate(
+        parameters=ExportParameters(
+            is_material=is_material,
+            name=name,
+            specific_handlers=BUILT_IN_EXPORTER,
+            export_sub_trees=True,
+            debug_prints=debug_prints,
+            write_from_roots=False,
+        )
+    )
+
+    while export_intermediate.step():
+        pass
+
+    export_intermediate.set_external(
+        (external_id, DEFAULT_HINT)
+        for external_id, external_item in export_intermediate.get_external().items()
+    )
+
+    string = export_intermediate.export_to_str(compress=False, json_indent=4)
+
+    with open(export_file, "r") as f:
+        expected_string = f.read()
+
+    diff = deepdiff.DeepDiff(
+        json.loads(expected_string), json.loads(string), math_epsilon=0.01
+    )
+
+    print(diff.pretty())
+    assert diff == {}
+
+
 BINARY_BLEND_FILES_DIR = Path(__file__).parent / "binary_blend_files"
+BACKWARDS_COMPATIBILITY_FILES_DIR = Path(__file__).parent / "backwards_compatibility"
 
 
 def all_subclasses(cls):
