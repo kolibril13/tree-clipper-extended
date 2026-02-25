@@ -1411,8 +1411,6 @@ class FieldToGridImporter(SpecificImporter[bpy.types.GeometryNodeFieldToGrid]):
             [GRID_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS]
         )
 
-        return super().deserialize()
-
 
 class FieldToGridItemExporter(SpecificExporter[bpy.types.GeometryNodeFieldToGridItem]):
     def serialize(self):
