@@ -141,13 +141,13 @@ def map_socket(*, specific_importer: SpecificImporter, socket_name: str, input: 
     )
     assert old_socket is not None, f"Missing old socket {socket_name}"
     if input:
-        specific_importer.register_getter(
+        specific_importer.importer._import_obj(
             getter=lambda: specific_importer.getter().inputs[socket_name],
             serialization=old_socket,
             from_root=specific_importer.from_root.add(f"Mapped input '{socket_name}'"),
         )
     else:
-        specific_importer.register_getter(
+        specific_importer.importer._import_obj(
             getter=lambda: specific_importer.getter().outputs[socket_name],
             serialization=old_socket,
             from_root=specific_importer.from_root.add(f"Mapped output '{socket_name}'"),
