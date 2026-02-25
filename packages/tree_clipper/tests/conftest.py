@@ -22,8 +22,5 @@ def pytest_generate_tests(metafunc):
         cls for cls in all_subclasses(bpy.types.Node) if len(all_subclasses(cls)) == 0
     )
 
-    if (
-        metafunc.function == test_all_nodes
-        or metafunc.function.__name__ == test_all_nodes.__name__
-    ):
+    if metafunc.function == test_all_nodes:
         metafunc.parametrize("node_type", node_types)
