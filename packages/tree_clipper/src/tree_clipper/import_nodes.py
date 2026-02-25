@@ -595,7 +595,7 @@ class ImportIntermediate:
 
     def set_external(
         self,
-        ids_and_references: Iterator[Tuple[int, bpy.types.ID]],
+        ids_and_references: Iterator[Tuple[int, bpy.types.ID | None]],
     ) -> None:
         for external_id, external_item in ids_and_references:
             scene_id = self.get_external()[str(external_id)][EXTERNAL_SCENE_ID]
