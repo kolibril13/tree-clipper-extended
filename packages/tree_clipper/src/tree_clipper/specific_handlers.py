@@ -127,6 +127,41 @@ def _import_node_parent(specific_importer: SpecificImporter) -> None:
     specific_importer.importer.defer_after_nodes_before_links.append(deferred)
 
 
+# This is needed for manually mapping sockets for backwards compatibility
+def map_socket(*, specific_importer: SpecificImporter, socket_name: str, input: bool):
+    old_socket = next(
+        (
+            old
+            for old in specific_importer.serialization[INPUTS if input else OUTPUTS][
+                DATA
+            ][ITEMS]
+            if old[DATA][NAME] == socket_name
+        ),
+        None,
+    )
+    assert old_socket is not None, f"Missing old socket {socket_name}"
+    if input:
+        specific_importer.register_getter(
+            getter=lambda: specific_importer.getter().inputs[socket_name],
+            serialization=old_socket,
+            from_root=specific_importer.from_root.add(f"Mapped input '{socket_name}'"),
+        )
+    else:
+        specific_importer.register_getter(
+            getter=lambda: specific_importer.getter().outputs[socket_name],
+            serialization=old_socket,
+            from_root=specific_importer.from_root.add(f"Mapped output '{socket_name}'"),
+        )
+
+
+def map_socket_input(*, importer: SpecificImporter, name: str):
+    map_socket(specific_importer=importer, socket_name=name, input=True)
+
+
+def map_socket_output(*, importer: SpecificImporter, name: str):
+    map_socket(specific_importer=importer, socket_name=name, input=False)
+
+
 # Possible socket data types: https://docs.blender.org/api/current/bpy_types_enum_items/node_socket_data_type_items.html#rna-enum-node-socket-data-type-items
 # Only a subset of those are supported on the capture attribute node: FLOAT, INT, VECTOR, RGBA, BOOLEAN, QUATERNION, MATRIX
 # TODO this is incomplete?
@@ -1550,48 +1585,18 @@ if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 1) or bpy.app.version[0] >
                 # this might not be needed, but nice to have all the getters
                 self.only_create_getters([INPUTS, OUTPUTS])
 
-                # this will probably move somwhere else as soon as we need it twice
-                def map_socket(socket_name, input):
-                    old_socket = next(
-                        (
-                            old
-                            for old in self.serialization[INPUTS if input else OUTPUTS][
-                                DATA
-                            ][ITEMS]
-                            if old[DATA][NAME] == socket_name
-                        ),
-                        None,
-                    )
-                    assert old_socket is not None, f"Missing old socket {socket_name}"
-                    if input:
-                        self.register_getter(
-                            getter=lambda: self.getter().inputs[socket_name],
-                            serialization=old_socket,
-                            from_root=self.from_root.add(
-                                f"Mapped input '{socket_name}'"
-                            ),
-                        )
-                    else:
-                        self.register_getter(
-                            getter=lambda: self.getter().outputs[socket_name],
-                            serialization=old_socket,
-                            from_root=self.from_root.add(
-                                f"Mapped output '{socket_name}'"
-                            ),
-                        )
-
                 # allow conneting the old links
-                map_socket("String", True)
-                map_socket("Size", True)
-                map_socket("Character Spacing", True)
-                map_socket("Word Spacing", True)
-                map_socket("Line Spacing", True)
-                map_socket("Text Box Width", True)
-                map_socket("Text Box Height", True)
+                map_socket_input(importer=self, name="String")
+                map_socket_input(importer=self, name="Size")
+                map_socket_input(importer=self, name="Character Spacing")
+                map_socket_input(importer=self, name="Word Spacing")
+                map_socket_input(importer=self, name="Line Spacing")
+                map_socket_input(importer=self, name="Text Box Width")
+                map_socket_input(importer=self, name="Text Box Height")
 
-                map_socket("Curve Instances", False)
-                map_socket("Line", False)
-                map_socket("Pivot Point", False)
+                map_socket_output(importer=self, name="Curve Instances")
+                map_socket_output(importer=self, name="Line")
+                map_socket_output(importer=self, name="Pivot Point")
 
                 # map node attributes to default socket values
                 font = self.importer.getters.get(self.serialization[FONT])
@@ -1619,10 +1624,7 @@ if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 1) or bpy.app.version[0] >
 
                 return
 
-            self.import_all_simple_writable_properties_and_list(
-                # ordering is important, the list_items implicitly create sockets
-                [INPUTS, OUTPUTS]
-            )
+            self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
             _import_node_parent(self)
 
 
