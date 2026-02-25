@@ -41,3 +41,14 @@ if bpy.app.version[0] == 5 and bpy.app.version[1] == 1:
             # store in case of failure for easy debugging
             save_failed(f"{test_backward_compatibility_pack_uv_islands.__name__}")
             raise
+
+    def test_backward_compatibility_fill_curve():
+        try:
+            import_and_check_export(
+                import_file=_DIR / "5_0_fill_curve.json",
+                export_file=_DIR / "5_1_fill_curve.json",
+            )
+        except:
+            # store in case of failure for easy debugging
+            save_failed(f"{test_backward_compatibility_fill_curve.__name__}")
+            raise
