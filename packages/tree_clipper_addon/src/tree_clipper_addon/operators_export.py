@@ -1,4 +1,3 @@
-from tree_clipper.common import DEFAULT_HINT
 import bpy
 
 from typing import Any, TYPE_CHECKING
@@ -9,7 +8,7 @@ if TYPE_CHECKING:
 
 from pathlib import Path
 
-from ._vendor.tree_clipper.common import DEFAULT_FILE
+from ._vendor.tree_clipper.common import DEFAULT_FILE, DEFAULT_HINT
 
 from ._vendor.tree_clipper.specific_handlers import (
     BUILT_IN_EXPORTER,
