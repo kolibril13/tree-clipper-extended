@@ -1493,7 +1493,7 @@ class FieldToListItemExporter(SpecificExporter[bpy.types.GeometryNodeFieldToList
         return self.export_all_simple_writable_properties()
 
 
-class FieldToGridItemsImporter(
+class FieldToListItemsImporter(
     SpecificImporter[bpy.types.GeometryNodeFieldToListItems]
 ):
     def deserialize(self):
