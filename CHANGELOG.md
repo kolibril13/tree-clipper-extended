@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 This release is a Banger.
 
-Tree Clipper already accepted exports from an earlier version of *Tree Clipper*, but the Blender version had to match *exactly*.
-That was very limiting and we're now attempting to be backwards compatible.
+Tree Clipper already accepted exports from an earlier version of Tree Clipper, but the Blender version had to match exactly.
+That was very limiting, and we're now trying to be backward-compatible.
 
-Also worth highlighting: the progress related to third-party defined properties.
+Also worth highlighting: progress on third-party-defined properties.
 
 ### Added
 
