@@ -2,9 +2,6 @@ version = 1
 revision = 3
 requires-python = "==3.13.*"
 
-[options]
-prerelease-mode = "allow"
-
 [manifest]
 members = [
     "tree-clipper",
@@ -24,9 +21,9 @@ dependencies = [
     { name = "zstandard" },
 ]
 wheels = [
-    { url = "https://github.com/BradyAJohnston/dailybpy/releases/download/daily-2026-02-23/bpy-5.1.0b0-cp313-cp313-macosx_11_0_arm64.whl" },
-    { url = "https://github.com/BradyAJohnston/dailybpy/releases/download/daily-2026-02-23/bpy-5.1.0b0-cp313-cp313-manylinux_2_39_x86_64.whl" },
-    { url = "https://github.com/BradyAJohnston/dailybpy/releases/download/daily-2026-02-23/bpy-5.1.0b0-cp313-cp313-win_amd64.whl" },
+    { url = "https://github.com/BradyAJohnston/dailybpy/releases/download/daily-2026-02-25/bpy-5.1.0b0-cp313-cp313-macosx_11_0_arm64.whl" },
+    { url = "https://github.com/BradyAJohnston/dailybpy/releases/download/daily-2026-02-25/bpy-5.1.0b0-cp313-cp313-manylinux_2_39_x86_64.whl" },
+    { url = "https://github.com/BradyAJohnston/dailybpy/releases/download/daily-2026-02-25/bpy-5.1.0b0-cp313-cp313-win_amd64.whl" },
 ]
 
 [[package]]
@@ -242,7 +239,7 @@ wheels = [
 
 [[package]]
 name = "tree-clipper"
-version = "0.1.5"
+version = "0.1.6"
 source = { editable = "packages/tree_clipper" }
 
 [package.optional-dependencies]
