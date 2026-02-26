@@ -28,6 +28,10 @@ members = [
 ]
 
 [dependency-groups]
+build = [
+  "vendorize",
+  "pip>=25.3",
+]
 dev = [
   "fake-bpy-module>=20251003",
   "pytest>=9.0.1",

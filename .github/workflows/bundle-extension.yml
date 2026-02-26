@@ -16,7 +16,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
 
       - name: Vendorize Core Logic
-        run: uv run python-vendorize
+        run: uv run --only-group "build" python-vendorize
 
       - name: Get build script
         working-directory: packages/tree_clipper_addon/src
@@ -24,11 +24,11 @@ jobs:
 
       - name: Build Blender extension bundles
         working-directory: packages/tree_clipper_addon/src/tree_clipper_addon
-        run: uv run --python 3.11 ../blender_ext.py build
+        run: uv run --no-project --python 3.11 ../blender_ext.py build
 
       - name: Generate index.json for easy updates
         working-directory: packages/tree_clipper_addon/src/tree_clipper_addon
-        run: uv run --python 3.11 ../blender_ext.py server-generate --repo-dir=./
+        run: uv run --no-project --python 3.11 ../blender_ext.py server-generate --repo-dir=./
 
       - uses: actions/upload-artifact@v4
         with:
