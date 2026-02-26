@@ -78,26 +78,27 @@ def diff_exports(
     assert diff == {}
 
 
-def round_trip_without_external(original_name: str):
-    def export_to_string(name: str) -> str:
-        export_intermediate = ExportIntermediate(
-            parameters=ExportParameters(
-                is_material=False,
-                name=name,
-                specific_handlers=BUILT_IN_EXPORTER,
-                export_sub_trees=True,
-                debug_prints=True,
-                write_from_roots=False,
-            )
+def export_to_string(name: str) -> str:
+    export_intermediate = ExportIntermediate(
+        parameters=ExportParameters(
+            is_material=False,
+            name=name,
+            specific_handlers=BUILT_IN_EXPORTER,
+            export_sub_trees=True,
+            debug_prints=True,
+            write_from_roots=False,
         )
+    )
 
-        while export_intermediate.step():
-            pass
+    while export_intermediate.step():
+        pass
 
-        string = export_intermediate.export_to_str(compress=False, json_indent=4)
-        print(string)
-        return string
+    string = export_intermediate.export_to_str(compress=False, json_indent=4)
+    print(string)
+    return string
 
+
+def round_trip_without_external(original_name: str):
     before = export_to_string(original_name)
 
     import_intermediate = ImportIntermediate(string=before)
