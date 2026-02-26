@@ -13,6 +13,9 @@ from tree_clipper.common import (
     TREES,
     NAME,
     DEFAULT_HINT,
+    TREE_CLIPPER_VERSION,
+    CURRENT_TREE_CLIPPER_VERSION,
+    BLENDER_VERSION,
 )
 from tree_clipper.id_data_getter import get_data_block_from_id_name
 from tree_clipper.export_nodes import ExportIntermediate, ExportParameters
@@ -261,9 +264,10 @@ def import_and_check_export(
     with open(export_file, "r") as f:
         expected_string = f.read()
 
-    diff = deepdiff.DeepDiff(
-        json.loads(expected_string), json.loads(string), math_epsilon=0.01
-    )
+    expected = json.loads(expected_string)
+    expected[TREE_CLIPPER_VERSION] = CURRENT_TREE_CLIPPER_VERSION
+    expected[BLENDER_VERSION] = bpy.app.version_string
+    diff = deepdiff.DeepDiff(expected, json.loads(string), math_epsilon=0.01)
 
     print(diff.pretty())
     assert diff == {}
