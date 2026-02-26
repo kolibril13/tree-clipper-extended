@@ -424,6 +424,21 @@ From root: {from_root.to_str()}"""
                         if self.debug_prints:
                             print(f"{prop_from_root.to_str()}: missing, assume not set")
                         continue
+
+                    # https://github.com/Algebraic-UG/tree_clipper/issues/161
+                    if (
+                        prop.type in [PROP_TYPE_POINTER, PROP_TYPE_COLLECTION]
+                        and prop.fixed_type.__module__ != "_bpy_types"
+                    ):
+                        self.report.warnings.append(
+                            f"""This property is missing in serialization.
+It appears to be from a third-party addon: {prop.fixed_type.__module__}
+
+Tree Clipper is skipping it.
+{prop_from_root.to_str()}"""
+                        )
+                        continue
+
                     self._error_out(
                         getter=getter,
                         reason="missing property in serialization",
