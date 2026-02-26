@@ -94,7 +94,7 @@ def test_third_party_only_exporter_has_it():
         try:
             diff_exports(before=before, import_report=import_report, after=after)
             assert False, "diff should be the properties"
-        except:
+        except AssertionError:
             pass
 
         register_third_party_properties()
@@ -125,7 +125,7 @@ def test_third_party_only_impoter_has_it():
         try:
             diff_exports(before=before, import_report=import_report, after=after)
             assert False, "diff should be the properties"
-        except:
+        except AssertionError:
             pass
 
     finally:
