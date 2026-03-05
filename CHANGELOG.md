@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.6] - 2026-02-26
+
+This release is a Banger.
+
+Tree Clipper already accepted exports from an earlier version of Tree Clipper, but the Blender version had to match exactly.
+That was very limiting, and we're now trying to be backward-compatible.
+
+Also worth highlighting: progress on third-party-defined properties.
+
+### Added
+
+- Support for Blender 5.1.
+- Backwards compatibility.
+
+### Changed
+
+### Fixed
+
+- Issues with properties registered by third-party addons.
+- Min/Max issue for certain subtypes in interface sockets.
+- Crytomatte nodes issues.
+
 ## [0.1.5] - 2026-01-23
 
 This version might be the first to be in the extension store.
