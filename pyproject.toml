@@ -15,11 +15,11 @@ version = "0.0.0" # not used
 #requires-python = "== 3.11.*"
 #dependencies = [ "bpy==5.0.*", "tree-clipper"]
 
-requires-python = "== 3.13.*"
-dependencies = [ "bpy==5.1.*", "tree-clipper"]
-
 #requires-python = "== 3.13.*"
-#dependencies = [ "bpy==5.2.*", "tree-clipper"]
+#dependencies = [ "bpy==5.1.*", "tree-clipper"]
+
+requires-python = "== 3.13.*"
+dependencies = [ "bpy==5.2.*", "tree-clipper"]
 
 
 [tool.uv.workspace]
