@@ -1,4 +1,4 @@
-<img src="icon.svg" alt="Featured Image" width="50px" />
+<img src="icon.svg" alt="Featured Image" width="70px" />
 
 # Tree Clipper Package
 
