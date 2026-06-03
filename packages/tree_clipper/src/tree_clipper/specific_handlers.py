@@ -1,6 +1,6 @@
 import bpy
 
-from typing import Type
+from typing import Type, Any
 
 from .specific_abstract import (
     _BUILT_IN_EXPORTER,
@@ -8,6 +8,8 @@ from .specific_abstract import (
     SpecificExporter,
     SpecificImporter,
 )
+
+from .import_nodes import Importer
 
 from .common import (
     DATA,
@@ -436,16 +438,26 @@ class TextureNodeGroupImporter(SpecificImporter[bpy.types.TextureNodeGroup]):
         _import_node_parent(self)
 
 
+# https://github.com/Algebraic-UG/tree_clipper/issues/205
+def remove_disabled_in_old_file(importer: Importer, serialization: dict[str, Any]):
+    if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[0] > 5:
+        if importer.blender_version[0] == 5 and importer.blender_version[1] < 2:
+            serialization[ITEMS] = [s for s in serialization[ITEMS] if s[DATA][ENABLED]]
+
+
 class NodeInputsImporter(SpecificImporter[bpy.types.NodeInputs]):
     def deserialize(self):
         expected = len(self.serialization[ITEMS])
         current = len(self.getter())
         if current != expected:
-            raise RuntimeError(
-                f"""{self.from_root.to_str()}
+            remove_disabled_in_old_file(self.importer, self.serialization)
+            expected = len(self.serialization[ITEMS])
+            if current != expected:
+                raise RuntimeError(
+                    f"""{self.from_root.to_str()}
 expected {expected} in-sockets but found {current}
 we currently don't support creating sockets"""
-            )
+                )
 
 
 class NodeOutputsImporter(SpecificImporter[bpy.types.NodeOutputs]):
@@ -453,11 +465,14 @@ class NodeOutputsImporter(SpecificImporter[bpy.types.NodeOutputs]):
         expected = len(self.serialization[ITEMS])
         current = len(self.getter())
         if current != expected:
-            raise RuntimeError(
-                f"""{self.from_root.to_str()}
+            remove_disabled_in_old_file(self.importer, self.serialization)
+            expected = len(self.serialization[ITEMS])
+            if current != expected:
+                raise RuntimeError(
+                    f"""{self.from_root.to_str()}
 expected {expected} out-sockets but found {current}
 we currently don't support creating sockets"""
-            )
+                )
 
 
 class SocketExporter(SpecificExporter[bpy.types.NodeSocket]):
