@@ -1552,6 +1552,22 @@ class RotateEulerImporter(SpecificImporter[bpy.types.FunctionNodeRotateEuler]):
         _import_node_parent(self)
 
 
+class MathImporter(SpecificImporter[bpy.types.ShaderNodeMath]):
+    """We need to trigger the import of operation first"""
+
+    def deserialize(self) -> None:
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
+class VectorMathImporter(SpecificImporter[bpy.types.ShaderNodeVectorMath]):
+    """We need to trigger the import of operation first"""
+
+    def deserialize(self) -> None:
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
 if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 1) or bpy.app.version[0] > 5:
 
     class FieldToListExporter(SpecificExporter[bpy.types.GeometryNodeFieldToList]):
