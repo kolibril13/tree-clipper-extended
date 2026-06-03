@@ -647,6 +647,37 @@ def compat_5_1(importer: Importer) -> bool:
     return current_is_at_least_5_2 and import_is_at_most_5_1
 
 
+# https://github.com/Algebraic-UG/tree_clipper/issues/210
+def insert_fake_quality_socket(serialization: dict[str, Any]):
+    fake_quality_socket = {
+        "id": -1,
+        "data": {
+            "name": "Quality",
+            "description": "",
+            "hide": False,
+            "enabled": True,
+            "link_limit": 1,
+            "show_expanded": False,
+            "hide_value": False,
+            "pin_gizmo": False,
+            "type": "INT",
+            "display_shape": "LINE",
+            "default_value": 3,
+        },
+    }
+    serialization[INPUTS][DATA][ITEMS].insert(5, fake_quality_socket)
+
+
+class SubdivisionSurfaceImporter(
+    SpecificImporter[bpy.types.GeometryNodeSubdivisionSurface]
+):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            insert_fake_quality_socket(self.serialization)
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
 # https://github.com/Algebraic-UG/tree_clipper/issues/209
 def insert_fake_thin_wall_socket(serialization: dict[str, Any]):
     fake_thin_wall_socket = {
