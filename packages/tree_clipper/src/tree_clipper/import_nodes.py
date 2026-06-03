@@ -150,7 +150,7 @@ class Importer:
 
     def register_as_deserialized(self, *, ident: int, getter: GETTER):
         if ident in self.getters:
-            raise RuntimeError("Double deserialization")
+            raise RuntimeError("Double deserialization: {ident}")
         self.getters[ident] = getter
 
     ################################################################################
