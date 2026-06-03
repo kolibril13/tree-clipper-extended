@@ -339,9 +339,11 @@ From root: {from_root.to_str()}"""
         if self.debug_prints:
             print(f"{from_root.to_str()}: importing")
 
-        if serialization[ID] in self.getters:
-            raise RuntimeError(f"Double deserialization: {from_root.to_str()}")
-        self.getters[serialization[ID]] = getter
+        # hack for inserting fake stuff for backward compat
+        if serialization[ID] != -1:
+            if serialization[ID] in self.getters:
+                raise RuntimeError(f"Double deserialization: {from_root.to_str()}")
+            self.getters[serialization[ID]] = getter
 
         deserializer(
             self,

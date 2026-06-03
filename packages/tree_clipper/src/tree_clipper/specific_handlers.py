@@ -637,8 +637,39 @@ class CaptureAttrExporter(SpecificExporter[bpy.types.GeometryNodeCaptureAttribut
         )
 
 
+# https://github.com/Algebraic-UG/tree_clipper/issues/208
+def insert_fake_selection_socket(serialization: dict[str, Any]):
+    fake_selection_socket = {
+        "id": -1,
+        "data": {
+            "name": "Selection",
+            "description": "",
+            "hide": False,
+            "enabled": True,
+            "link_limit": 1,
+            "show_expanded": False,
+            "hide_value": True,
+            "pin_gizmo": False,
+            "type": "BOOLEAN",
+            "display_shape": "DIAMOND",
+            "default_value": True,  # maybe this should be false for output
+        },
+    }
+    serialization[INPUTS][DATA][ITEMS].insert(1, fake_selection_socket)
+    serialization[OUTPUTS][DATA][ITEMS].insert(1, fake_selection_socket)
+
+
 class CaptureAttrImporter(SpecificImporter[bpy.types.GeometryNodeCaptureAttribute]):
     def deserialize(self):
+        if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[
+            0
+        ] > 5:
+            if (
+                self.importer.blender_version[0] == 5
+                and self.importer.blender_version[1] < 2
+            ):
+                insert_fake_selection_socket(self.serialization)
+
         self.import_all_simple_writable_properties_and_list(
             # ordering is important, the capture_items implicitly create sockets
             [CAPTURE_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS],
