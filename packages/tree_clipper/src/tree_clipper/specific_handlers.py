@@ -637,6 +637,45 @@ class CaptureAttrExporter(SpecificExporter[bpy.types.GeometryNodeCaptureAttribut
         )
 
 
+def compat_5_1(importer: Importer) -> bool:
+    current_is_at_least_5_2 = (
+        bpy.app.version[0] == 5 and bpy.app.version[1] >= 2
+    ) or bpy.app.version[0] > 5
+    import_is_at_most_5_1 = (
+        importer.blender_version[0] == 5 and importer.blender_version[1] < 2
+    )
+    return current_is_at_least_5_2 and import_is_at_most_5_1
+
+
+# https://github.com/Algebraic-UG/tree_clipper/issues/209
+def insert_fake_thin_wall_socket(serialization: dict[str, Any]):
+    fake_thin_wall_socket = {
+        "id": -1,
+        "data": {
+            "name": "Thin Wall",
+            "description": "",
+            "hide": False,
+            "enabled": True,
+            "link_limit": 1,
+            "show_expanded": False,
+            "hide_value": False,
+            "pin_gizmo": False,
+            "type": "BOOLEAN",
+            "display_shape": "CIRCLE",
+            "default_value": False,
+        },
+    }
+    serialization[INPUTS][DATA][ITEMS].insert(5, fake_thin_wall_socket)
+
+
+class PrincipledBSDFImporter(SpecificImporter[bpy.types.ShaderNodeBsdfPrincipled]):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            insert_fake_thin_wall_socket(self.serialization)
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
 # https://github.com/Algebraic-UG/tree_clipper/issues/208
 def insert_fake_selection_socket(serialization: dict[str, Any]):
     fake_selection_socket = {
@@ -661,14 +700,8 @@ def insert_fake_selection_socket(serialization: dict[str, Any]):
 
 class CaptureAttrImporter(SpecificImporter[bpy.types.GeometryNodeCaptureAttribute]):
     def deserialize(self):
-        if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[
-            0
-        ] > 5:
-            if (
-                self.importer.blender_version[0] == 5
-                and self.importer.blender_version[1] < 2
-            ):
-                insert_fake_selection_socket(self.serialization)
+        if compat_5_1(self.importer):
+            insert_fake_selection_socket(self.serialization)
 
         self.import_all_simple_writable_properties_and_list(
             # ordering is important, the capture_items implicitly create sockets
