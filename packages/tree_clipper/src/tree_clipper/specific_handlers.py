@@ -443,6 +443,16 @@ class TextureNodeGroupImporter(SpecificImporter[bpy.types.TextureNodeGroup]):
 def remove_disabled_in_old_file(importer: Importer, serialization: dict[str, Any]):
     if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[0] > 5:
         if importer.blender_version[0] == 5 and importer.blender_version[1] < 2:
+            for disabled in [
+                s[ID] for s in serialization[ITEMS] if not s[DATA][ENABLED]
+            ]:
+                if importer.debug_prints:
+                    print(
+                        f"Removing disabled socket for backward compatibility: {disabled}"
+                    )
+                if disabled in importer.disabled_ids:
+                    raise RuntimeError("Double disabled: {disabled}")
+                importer.disabled_ids.add(disabled)
             serialization[ITEMS] = [s for s in serialization[ITEMS] if s[DATA][ENABLED]]
 
 
@@ -520,6 +530,24 @@ class LinkExporter(SpecificExporter[bpy.types.NodeLink]):
 
 class LinksImporter(SpecificImporter[bpy.types.NodeLinks]):
     def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/205
+            def connected_to_disabled(link):
+                return (
+                    link[DATA][FROM_SOCKET] in self.importer.disabled_ids
+                    or link[DATA][TO_SOCKET] in self.importer.disabled_ids
+                )
+
+            if self.importer.debug_prints:
+                for link in self.serialization[ITEMS]:
+                    if connected_to_disabled(link):
+                        print(
+                            f"Removing link from/to disabled for backward compatibility: {link[ID]}"
+                        )
+            self.serialization[ITEMS] = [
+                l for l in self.serialization[ITEMS] if not connected_to_disabled(l)
+            ]
+
         multi_links = []
         for i, link in enumerate(self.serialization[ITEMS]):
             data = link[DATA]

@@ -95,6 +95,13 @@ class Importer:
         # we need to lookup nodes and their sockets for linking them
         self.current_tree = None
 
+        # this is for backward compatibilty
+        # in some cases, disabled sockets do not exist in newer versions
+        # and we remove them from the serialization
+        # if links (or anything) reference them it we can avoid failure by
+        # checking that it's been removed intentionally
+        self.disabled_ids = set()
+
         self.report = ImportReport()
 
     ################################################################################
