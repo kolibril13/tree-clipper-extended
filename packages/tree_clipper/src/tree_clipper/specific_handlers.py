@@ -550,6 +550,9 @@ class LinksImporter(SpecificImporter[bpy.types.NodeLinks]):
 
         multi_links = []
         for i, link in enumerate(self.serialization[ITEMS]):
+            if self.importer.debug_prints:
+                print(f"{self.from_root.to_str()}: Importing link {link[ID]}")
+
             data = link[DATA]
             from_socket_id = data[FROM_SOCKET]
             to_socket_id = data[TO_SOCKET]
