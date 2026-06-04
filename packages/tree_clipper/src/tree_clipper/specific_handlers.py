@@ -647,6 +647,51 @@ def compat_5_1(importer: Importer) -> bool:
     return current_is_at_least_5_2 and import_is_at_most_5_1
 
 
+FAKE_BASE_SOCKET = {
+    "id": -1,
+    "data": {
+        "name": "Base",
+        "description": "",
+        "hide": False,
+        "enabled": False,
+        "link_limit": 1,
+        "show_expanded": False,
+        "hide_value": False,
+        "pin_gizmo": False,
+        "type": "INT",
+        "display_shape": "CIRCLE",
+        "default_value": 10,
+    },
+}
+
+FAKE_PADDING_SOCKET = {
+    "id": -1,
+    "data": {
+        "name": "Padding",
+        "description": "",
+        "hide": False,
+        "enabled": False,
+        "link_limit": 1,
+        "show_expanded": False,
+        "hide_value": False,
+        "pin_gizmo": False,
+        "type": "INT",
+        "display_shape": "CIRCLE",
+        "default_value": 0,
+    },
+}
+
+
+class ValueToStringImporter(SpecificImporter[bpy.types.FunctionNodeValueToString]):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/197
+            self.serialization[INPUTS][DATA][ITEMS].insert(2, FAKE_BASE_SOCKET)
+            self.serialization[INPUTS][DATA][ITEMS].insert(3, FAKE_PADDING_SOCKET)
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
 FAKE_QUALITY_SOCKET = {
     "id": -1,
     "data": {
