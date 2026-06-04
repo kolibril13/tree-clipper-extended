@@ -648,6 +648,16 @@ def compat_5_1(importer: Importer) -> bool:
     return current_is_at_least_5_2 and import_is_at_most_5_1
 
 
+class CameraInfoImporter(SpecificImporter[bpy.types.GeometryNodeCameraInfo]):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/212
+            self.serialization[OUTPUTS][DATA][ITEMS][2][DATA][DEFAULT_VALUE].pop()
+            self.serialization[OUTPUTS][DATA][ITEMS][3][DATA][DEFAULT_VALUE].pop()
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
 class InputStringImporter(SpecificImporter[bpy.types.FunctionNodeInputString]):
     def deserialize(self):
         if compat_5_1(self.importer):
