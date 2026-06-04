@@ -703,32 +703,30 @@ class PrincipledBSDFImporter(SpecificImporter[bpy.types.ShaderNodeBsdfPrincipled
         _import_node_parent(self)
 
 
-# https://github.com/Algebraic-UG/tree_clipper/issues/208
-def insert_fake_selection_socket(serialization: dict[str, Any]):
-    fake_selection_socket = {
-        "id": -1,
-        "data": {
-            "name": "Selection",
-            "description": "",
-            "hide": False,
-            "enabled": True,
-            "link_limit": 1,
-            "show_expanded": False,
-            "hide_value": True,
-            "pin_gizmo": False,
-            "type": "BOOLEAN",
-            "display_shape": "DIAMOND",
-            "default_value": True,  # maybe this should be false for output
-        },
-    }
-    serialization[INPUTS][DATA][ITEMS].insert(1, fake_selection_socket)
-    serialization[OUTPUTS][DATA][ITEMS].insert(1, fake_selection_socket)
+FAKE_SELECTION_SOCKET = {
+    "id": -1,
+    "data": {
+        "name": "Selection",
+        "description": "",
+        "hide": False,
+        "enabled": True,
+        "link_limit": 1,
+        "show_expanded": False,
+        "hide_value": True,
+        "pin_gizmo": False,
+        "type": "BOOLEAN",
+        "display_shape": "DIAMOND",
+        "default_value": True,  # maybe this should be false for output
+    },
+}
 
 
 class CaptureAttrImporter(SpecificImporter[bpy.types.GeometryNodeCaptureAttribute]):
     def deserialize(self):
         if compat_5_1(self.importer):
-            insert_fake_selection_socket(self.serialization)
+            # https://github.com/Algebraic-UG/tree_clipper/issues/208
+            self.serialization[INPUTS][DATA][ITEMS].insert(1, FAKE_SELECTION_SOCKET)
+            self.serialization[OUTPUTS][DATA][ITEMS].insert(1, FAKE_SELECTION_SOCKET)
 
         self.import_all_simple_writable_properties_and_list(
             # ordering is important, the capture_items implicitly create sockets
