@@ -692,6 +692,15 @@ class ValueToStringImporter(SpecificImporter[bpy.types.FunctionNodeValueToString
         _import_node_parent(self)
 
 
+class StringToValueImporter(SpecificImporter[bpy.types.FunctionNodeStringToValue]):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/198
+            self.serialization[INPUTS][DATA][ITEMS].insert(1, FAKE_BASE_SOCKET)
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
 FAKE_QUALITY_SOCKET = {
     "id": -1,
     "data": {
