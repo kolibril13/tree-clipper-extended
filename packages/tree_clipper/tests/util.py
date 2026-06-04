@@ -208,7 +208,8 @@ def import_and_check(*, import_file: Path, debug_prints: bool = False):
         )
     )
 
-    assert len(import_report.warnings) == 0
+    if import_report.warnings:
+        raise RuntimeError(f"Import finished with warnings: {import_report.warnings}")
 
 
 def import_and_check_export(
