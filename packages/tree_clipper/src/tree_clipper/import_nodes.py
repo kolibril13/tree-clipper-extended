@@ -428,10 +428,10 @@ From root: {from_root.to_str()}"""
                         continue
 
                     # https://github.com/Algebraic-UG/tree_clipper/issues/161
-                    if (
-                        prop.type in [PROP_TYPE_POINTER, PROP_TYPE_COLLECTION]
-                        and prop.fixed_type.__module__ != "_bpy_types"
-                    ):
+                    if prop.type in [
+                        PROP_TYPE_POINTER,
+                        PROP_TYPE_COLLECTION,
+                    ] and prop.fixed_type.__module__ not in ["_bpy_types", "bpy.types"]:
                         self.report.warnings.append(
                             f"""This property is missing in serialization.
 It appears to be from a third-party addon: {prop.fixed_type.__module__}
