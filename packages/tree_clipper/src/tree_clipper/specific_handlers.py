@@ -102,6 +102,7 @@ OVERFLOW = "overflow"
 ALIGN_X = "align_x"
 ALIGN_Y = "align_y"
 PIVOT_MODE = "pivot_mode"
+TEXTBOX_STATE = "textbox_state"
 
 
 # this might not be needed anymore in many cases, because
@@ -645,6 +646,15 @@ def compat_5_1(importer: Importer) -> bool:
         importer.blender_version[0] == 5 and importer.blender_version[1] < 2
     )
     return current_is_at_least_5_2 and import_is_at_most_5_1
+
+
+class InputStringImporter(SpecificImporter[bpy.types.FunctionNodeInputString]):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/211
+            self.serialization[TEXTBOX_STATE] = None
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
 
 
 FAKE_BASE_SOCKET = {
