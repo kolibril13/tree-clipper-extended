@@ -2,6 +2,7 @@ from tests.util import (
     make_test_object,
     make_test_collection,
     make_test_node_tree,
+    make_test_sound,
     save_failed,
 )
 import bpy
@@ -27,6 +28,7 @@ _EXTERNAL_ITEM_MAKER: dict[str, Callable[[], bpy.types.ID]] = {
     "Collection": make_test_collection,
     # this is just so that the tree stays alive in the savefile
     "NodeTree": lambda: make_test_node_tree("tree_as_external"),
+    "Sound": make_test_sound,
 }
 
 
@@ -61,6 +63,10 @@ def _create_setup():
         node.font = _EXTERNAL_ITEM_MAKER["VectorFont"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
     else:
         node.inputs["Font"].default_value = _EXTERNAL_ITEM_MAKER["VectorFont"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
+
+    if bpy.app.version[0] == 5 and bpy.app.version[1] >= 2:
+        node = nodes.new("GeometryNodeSampleSoundFrequencies")
+        node.inputs["Sound"].default_value = _EXTERNAL_ITEM_MAKER["Sound"]()
 
     return name
 
@@ -134,7 +140,10 @@ def _check_after_import(name: str):
         assert tree.nodes["String to Curves"].font is not None  # ty: ignore[unresolved-attribute]
     else:
         assert tree.nodes["String to Curves"].inputs["Font"].default_value is not None  # ty: ignore[unresolved-attribute]
-    assert len(tree.nodes) == 7, "if this fails the lines above must also change"
+    assert (
+        tree.nodes["Sample Sound Frequencies"].inputs["Sound"].default_value is not None
+    )
+    assert len(tree.nodes) == 8, "if this fails the lines above must also change"
 
 
 def test_external_items():

@@ -35,6 +35,13 @@ def make_test_collection() -> bpy.types.Collection:
     return collection
 
 
+def make_test_sound() -> bpy.types.Sound:
+    return bpy.data.sounds.load(
+        str(SOUNDS_DIR / "615771__synxwtf__breakbeats_135bpm_1.wav"),
+        check_existing=True,
+    )
+
+
 def make_test_node_tree(
     name: str = "test",
     ty: Literal[
@@ -274,8 +281,10 @@ def import_and_check_export(
     assert diff == {}
 
 
-BINARY_BLEND_FILES_DIR = Path(__file__).parent / "binary_blend_files"
-BACKWARDS_COMPATIBILITY_FILES_DIR = Path(__file__).parent / "backwards_compatibility"
+TEST_DIR = Path(__file__).parent
+BINARY_BLEND_FILES_DIR = TEST_DIR / "binary_blend_files"
+BACKWARDS_COMPATIBILITY_FILES_DIR = TEST_DIR / "backwards_compatibility"
+SOUNDS_DIR = TEST_DIR / "sounds"
 
 
 def all_subclasses(cls):
