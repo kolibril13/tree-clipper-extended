@@ -1,5 +1,4 @@
 import bpy
-from pathlib import Path
 
 from .util import (
     save_failed,
