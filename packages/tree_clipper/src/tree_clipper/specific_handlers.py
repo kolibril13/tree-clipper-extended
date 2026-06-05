@@ -1940,6 +1940,22 @@ if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 1) or bpy.app.version[0] >
             _import_node_parent(self)
 
 
+FAKE_ADD_SOCKET = {
+    "id": -1,
+    "data": {
+        "name": "",
+        "description": "",
+        "hide": False,
+        "enabled": True,
+        "link_limit": 4095,
+        "show_expanded": False,
+        "hide_value": False,
+        "pin_gizmo": False,
+        "type": "CUSTOM",
+        "display_shape": "CIRCLE",
+    },
+}
+
 if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[0] > 5:
 
     class RaycastSampleAttributeItemExporter(
@@ -1972,6 +1988,16 @@ if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[0] >
 
     class RaycastImporter(SpecificImporter[bpy.types.ShaderNodeRaycast]):
         def deserialize(self):
+            if compat_5_1(self.importer):
+                # https://github.com/Algebraic-UG/tree_clipper/issues/213
+                self.serialization[SAMPLE_ATTRIBUTE_ITEMS] = {
+                    "id": -1,
+                    "data": {"items": []},
+                }
+                self.serialization[ACTIVE_INDEX] = 0
+                self.serialization[INPUTS][DATA][ITEMS].insert(3, FAKE_ADD_SOCKET)
+                self.serialization[OUTPUTS][DATA][ITEMS].insert(5, FAKE_ADD_SOCKET)
+
             self.import_all_simple_writable_properties_and_list(
                 # ordering is important, the sample_attribute_items implicitly create sockets
                 [SAMPLE_ATTRIBUTE_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS]
