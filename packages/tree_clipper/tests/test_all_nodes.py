@@ -26,6 +26,7 @@ def test_all_nodes(node_type: Type[bpy.types.Node]):
             bpy.types.TextureNodeDecompose,
             # TODO: there is a "Gamma" node in the compositor, but it's the "shader version"
             bpy.types.CompositorNodeGamma,
+            bpy.types.GeometryNodeApplySimulatedData,
         ]:
             return
         # skip the output types of the pairs
