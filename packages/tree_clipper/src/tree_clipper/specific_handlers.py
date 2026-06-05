@@ -104,6 +104,7 @@ ALIGN_Y = "align_y"
 PIVOT_MODE = "pivot_mode"
 TEXTBOX_STATE = "textbox_state"
 SAMPLE_ATTRIBUTE_ITEMS = "sample_attribute_items"
+OPERATION = "operation"
 
 
 # this might not be needed anymore in many cases, because
@@ -403,6 +404,8 @@ class NodeImporter(SpecificImporter[bpy.types.Node]):
         # this is the case for many node types that would otherwise need a specific handler
         if DATA_TYPE in self.serialization:
             self.import_properties_from_id_list([DATA_TYPE])
+        if OPERATION in self.serialization:
+            self.import_properties_from_id_list([OPERATION])
 
         self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
         _import_node_parent(self)
@@ -1723,40 +1726,8 @@ class ColorManagedViewSettingsExporter(
         return data
 
 
-class CompareImporter(SpecificImporter[bpy.types.FunctionNodeCompare]):
-    """We need to trigger the import of operation first"""
-
-    def deserialize(self) -> None:
-        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
-        _import_node_parent(self)
-
-
-class BooleanMathImporter(SpecificImporter[bpy.types.FunctionNodeBooleanMath]):
-    """We need to trigger the import of operation first"""
-
-    def deserialize(self) -> None:
-        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
-        _import_node_parent(self)
-
-
 class RotateEulerImporter(SpecificImporter[bpy.types.FunctionNodeRotateEuler]):
     """We need to trigger the import of rotation_type first"""
-
-    def deserialize(self) -> None:
-        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
-        _import_node_parent(self)
-
-
-class MathImporter(SpecificImporter[bpy.types.ShaderNodeMath]):
-    """We need to trigger the import of operation first"""
-
-    def deserialize(self) -> None:
-        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
-        _import_node_parent(self)
-
-
-class VectorMathImporter(SpecificImporter[bpy.types.ShaderNodeVectorMath]):
-    """We need to trigger the import of operation first"""
 
     def deserialize(self) -> None:
         self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
