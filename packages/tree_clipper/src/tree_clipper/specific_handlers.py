@@ -105,6 +105,7 @@ PIVOT_MODE = "pivot_mode"
 TEXTBOX_STATE = "textbox_state"
 SAMPLE_ATTRIBUTE_ITEMS = "sample_attribute_items"
 OPERATION = "operation"
+SUBSURFACE_METHOD = "subsurface_method"
 
 
 # this might not be needed anymore in many cases, because
@@ -837,6 +838,8 @@ class PrincipledBSDFImporter(SpecificImporter[bpy.types.ShaderNodeBsdfPrincipled
         if compat_5_1(self.importer):
             # https://github.com/Algebraic-UG/tree_clipper/issues/209
             self.serialization[INPUTS][DATA][ITEMS].insert(5, FAKE_THIN_WALL_SOCKET)
+            if self.serialization[SUBSURFACE_METHOD] == "RANDOM_WALK":
+                self.serialization[SUBSURFACE_METHOD] = "RANDOM_WALK_LEGACY"
         self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
         _import_node_parent(self)
 
