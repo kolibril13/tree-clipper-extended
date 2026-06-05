@@ -286,6 +286,8 @@ BINARY_BLEND_FILES_DIR = TEST_DIR / "binary_blend_files"
 BACKWARDS_COMPATIBILITY_FILES_DIR = TEST_DIR / "backwards_compatibility"
 SOUNDS_DIR = TEST_DIR / "sounds"
 
+NODE_ASSETS_DIR = Path(bpy.utils.system_resource("DATAFILES", path="assets")) / "nodes"
+
 
 def all_subclasses(cls):
     subclasses = set(cls.__subclasses__())
