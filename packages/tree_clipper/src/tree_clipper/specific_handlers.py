@@ -695,6 +695,33 @@ class CameraInfoImporter(SpecificImporter[bpy.types.GeometryNodeCameraInfo]):
         _import_node_parent(self)
 
 
+FAKE_MODE_SOCKET = {
+    "id": -1,
+    "data": {
+        "name": "Mode",
+        "description": "",
+        "hide": False,
+        "enabled": True,
+        "link_limit": 1,
+        "show_expanded": False,
+        "hide_value": False,
+        "pin_gizmo": False,
+        "type": "MENU",
+        "display_shape": "CIRCLE",
+        "default_value": "From Start",
+    },
+}
+
+
+class FindInStringImporter(SpecificImporter[bpy.types.FunctionNodeFindInString]):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/182
+            self.serialization[INPUTS][DATA][ITEMS].insert(2, FAKE_MODE_SOCKET)
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
 class InputStringImporter(SpecificImporter[bpy.types.FunctionNodeInputString]):
     def deserialize(self):
         if compat_5_1(self.importer):
