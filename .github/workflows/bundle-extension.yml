@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@v8.2
 
       - name: Vendorize Core Logic
         run: uv run --only-group "build" python-vendorize
