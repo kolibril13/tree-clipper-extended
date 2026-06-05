@@ -59,7 +59,7 @@ def _create_setup():
     node = nodes.new("GeometryNodeStringToCurves")
     if bpy.app.version[0] == 5 and bpy.app.version[1] == 0:
         node.font = _EXTERNAL_ITEM_MAKER["VectorFont"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
-    elif bpy.app.version[0] == 5 and bpy.app.version[1] >= 1:
+    else:
         node.inputs["Font"].default_value = _EXTERNAL_ITEM_MAKER["VectorFont"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
 
     return name
@@ -132,7 +132,7 @@ def _check_after_import(name: str):
     assert tree.nodes["Collection"].collection is not None  # ty: ignore[unresolved-attribute]
     if bpy.app.version[0] == 5 and bpy.app.version[1] == 0:
         assert tree.nodes["String to Curves"].font is not None  # ty: ignore[unresolved-attribute]
-    elif bpy.app.version[0] == 5 and bpy.app.version[1] >= 1:
+    else:
         assert tree.nodes["String to Curves"].inputs["Font"].default_value is not None  # ty: ignore[unresolved-attribute]
     assert len(tree.nodes) == 7, "if this fails the lines above must also change"
 
