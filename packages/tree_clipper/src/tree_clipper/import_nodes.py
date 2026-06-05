@@ -438,13 +438,13 @@ From root: {from_root.to_str()}"""
                     if prop.type in [
                         PROP_TYPE_POINTER,
                         PROP_TYPE_COLLECTION,
-                    ] and prop.fixed_type.__module__ not in ["_bpy_types", "bpy.types"]:
+                    ] and prop.fixed_type.__module__ not in ["_bpy_types", "bpy.types"]:  # ty:ignore[unresolved-attribute]
                         self.report.warnings.append(
                             f"""This property is missing in serialization.
 It appears to be from a third-party addon: {prop.fixed_type.__module__}
 
 Tree Clipper is skipping it.
-{prop_from_root.to_str()}"""
+{prop_from_root.to_str()}"""  # ty:ignore[unresolved-attribute]
                         )
                         continue
 
@@ -505,7 +505,7 @@ Tree Clipper is skipping it.
             self.report.rename_material = (original_name, name)
 
             def getter() -> bpy.types.ShaderNodeTree:
-                return bpy.data.materials[name].node_tree  # type: ignore
+                return bpy.data.materials[name].node_tree
 
         if self.debug_prints:
             print(f"{from_root.to_str()}: entering")
@@ -639,7 +639,7 @@ class ImportIntermediate:
             no_clobber(
                 self.getters,
                 external_id,
-                make_id_data_getter(external_item),
+                make_id_data_getter(external_item),  # ty:ignore[invalid-argument-type]
             )
 
         # double check that only skipped ones are missing

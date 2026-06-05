@@ -289,7 +289,7 @@ def test_erindales_nodevember_12():
         make_everything_local()
 
         # https://github.com/Algebraic-UG/tree_clipper/issues/113
-        bpy.data.node_groups["Bézier Gizmos"].interface.items_tree[1].subtype = "NONE"  # ty:ignore[possibly-missing-attribute, unresolved-attribute]
+        bpy.data.node_groups["Bézier Gizmos"].interface.items_tree[1].subtype = "NONE"
 
         round_trip(original_name="12 Monument", is_material=False)
 

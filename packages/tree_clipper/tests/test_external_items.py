@@ -41,28 +41,28 @@ def _create_setup():
     nodes = tree.nodes
 
     node = nodes.new("GeometryNodeGroup")
-    node.node_tree = _EXTERNAL_ITEM_MAKER["NodeTree"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
+    node.node_tree = _EXTERNAL_ITEM_MAKER["NodeTree"]()
 
     node = nodes.new("GeometryNodeInputObject")
-    node.object = _EXTERNAL_ITEM_MAKER["Object"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
+    node.object = _EXTERNAL_ITEM_MAKER["Object"]()
 
     node = nodes.new("GeometryNodeInputImage")
-    node.image = _EXTERNAL_ITEM_MAKER["Image"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
+    node.image = _EXTERNAL_ITEM_MAKER["Image"]()
 
     node = nodes.new("GeometryNodeInputMaterial")
-    node.material = _EXTERNAL_ITEM_MAKER["Material"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
+    node.material = _EXTERNAL_ITEM_MAKER["Material"]()
 
     node = nodes.new("GeometryNodeInputCollection")
-    node.collection = _EXTERNAL_ITEM_MAKER["Collection"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
+    node.collection = _EXTERNAL_ITEM_MAKER["Collection"]()
 
     node = nodes.new("NodeFrame")
-    node.text = _EXTERNAL_ITEM_MAKER["Text"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
+    node.text = _EXTERNAL_ITEM_MAKER["Text"]()
 
     node = nodes.new("GeometryNodeStringToCurves")
     if bpy.app.version[0] == 5 and bpy.app.version[1] == 0:
-        node.font = _EXTERNAL_ITEM_MAKER["VectorFont"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
+        node.font = _EXTERNAL_ITEM_MAKER["VectorFont"]()
     else:
-        node.inputs["Font"].default_value = _EXTERNAL_ITEM_MAKER["VectorFont"]()  # ty: ignore[invalid-assignment, unresolved-attribute]
+        node.inputs["Font"].default_value = _EXTERNAL_ITEM_MAKER["VectorFont"]()
 
     if bpy.app.version[0] == 5 and bpy.app.version[1] >= 2:
         node = nodes.new("GeometryNodeSampleSoundFrequencies")
@@ -130,16 +130,16 @@ def _check_before_import(external_items: list[EXTERNAL_SERIALIZATION]):
 def _check_after_import(name: str):
     tree = bpy.data.node_groups[name]
     assert tree.annotation is not None
-    assert tree.nodes["Group"].node_tree is not None  # ty: ignore[unresolved-attribute]
-    assert tree.nodes["Frame"].text is not None  # ty: ignore[unresolved-attribute]
-    assert tree.nodes["Image"].image is not None  # ty: ignore[unresolved-attribute]
-    assert tree.nodes["Material"].material is not None  # ty: ignore[unresolved-attribute]
-    assert tree.nodes["Object"].object is not None  # ty: ignore[unresolved-attribute]
-    assert tree.nodes["Collection"].collection is not None  # ty: ignore[unresolved-attribute]
+    assert tree.nodes["Group"].node_tree is not None
+    assert tree.nodes["Frame"].text is not None
+    assert tree.nodes["Image"].image is not None
+    assert tree.nodes["Material"].material is not None
+    assert tree.nodes["Object"].object is not None
+    assert tree.nodes["Collection"].collection is not None
     if bpy.app.version[0] == 5 and bpy.app.version[1] == 0:
-        assert tree.nodes["String to Curves"].font is not None  # ty: ignore[unresolved-attribute]
+        assert tree.nodes["String to Curves"].font is not None
     else:
-        assert tree.nodes["String to Curves"].inputs["Font"].default_value is not None  # ty: ignore[unresolved-attribute]
+        assert tree.nodes["String to Curves"].inputs["Font"].default_value is not None
     assert (
         tree.nodes["Sample Sound Frequencies"].inputs["Sound"].default_value is not None
     )
