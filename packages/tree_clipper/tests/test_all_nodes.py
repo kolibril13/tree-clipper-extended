@@ -14,8 +14,7 @@ _PAIRED_NODE_TYPES = {
 
 def test_all_nodes(node_type: Type[bpy.types.Node]):
     try:
-        # these can't be instantiated
-        if node_type in [
+        ignore = [
             bpy.types.NodeGroup,
             bpy.types.NodeCustomGroup,
             bpy.types.GeometryNodeCustomGroup,
@@ -26,8 +25,13 @@ def test_all_nodes(node_type: Type[bpy.types.Node]):
             bpy.types.TextureNodeDecompose,
             # TODO: there is a "Gamma" node in the compositor, but it's the "shader version"
             bpy.types.CompositorNodeGamma,
-            bpy.types.GeometryNodeApplySimulatedData,  # ty:ignore[unresolved-attribute]
-        ]:
+        ]
+        if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[
+            0
+        ] > 5:
+            ignore.append(bpy.types.GeometryNodeApplySimulatedData)  # ty:ignore[unresolved-attribute]
+        # these can't be instantiated
+        if node_type in ignore:
             return
         # skip the output types of the pairs
         if node_type in _PAIRED_NODE_TYPES.values():

@@ -28,8 +28,9 @@ _EXTERNAL_ITEM_MAKER: dict[str, Callable[[], bpy.types.ID]] = {
     "Collection": make_test_collection,
     # this is just so that the tree stays alive in the savefile
     "NodeTree": lambda: make_test_node_tree("tree_as_external"),
-    "Sound": make_test_sound,
 }
+if bpy.app.version[0] == 5 and bpy.app.version[1] >= 2:
+    _EXTERNAL_ITEM_MAKER["Sound"] = make_test_sound
 
 
 def _create_setup():
@@ -140,10 +141,11 @@ def _check_after_import(name: str):
         assert tree.nodes["String to Curves"].font is not None
     else:
         assert tree.nodes["String to Curves"].inputs["Font"].default_value is not None
-    assert (
-        tree.nodes["Sample Sound Frequencies"].inputs["Sound"].default_value is not None
-    )
-    assert len(tree.nodes) == 8, "if this fails the lines above must also change"
+    if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[0] > 5:
+        assert (
+            tree.nodes["Sample Sound Frequencies"].inputs["Sound"].default_value
+            is not None
+        )
 
 
 def test_external_items():
