@@ -1728,6 +1728,14 @@ class ColorManagedViewSettingsExporter(
         return data
 
 
+class CompareImporter(SpecificImporter[bpy.types.FunctionNodeCompare]):
+    """We need to trigger the choices first"""
+
+    def deserialize(self) -> None:
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
 class RotateEulerImporter(SpecificImporter[bpy.types.FunctionNodeRotateEuler]):
     """We need to trigger the import of rotation_type first"""
 
