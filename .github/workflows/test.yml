@@ -17,7 +17,7 @@ jobs:
       name: Check code style
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@v5
+        - uses: actions/checkout@v6
 
         - uses: astral-sh/ruff-action@v3
 
@@ -37,12 +37,12 @@ jobs:
           matrix:
             os: [ubuntu-latest, macos-latest, windows-latest]
       steps:
-          - uses: actions/checkout@v5
+          - uses: actions/checkout@v6
             with:
               lfs: true
 
           - name: Install uv
-            uses: astral-sh/setup-uv@v5
+            uses: astral-sh/setup-uv@v8.2.0
 
           - name: Install tree_clipper
             run: uv sync --all-extras
@@ -52,7 +52,7 @@ jobs:
             run: uv run pytest
             continue-on-error: true
 
-          - uses: actions/upload-artifact@v4
+          - uses: actions/upload-artifact@v7
             with:
               name: blend-files-from-failed-${{ matrix.os }}
               path: test_failures/*.blend

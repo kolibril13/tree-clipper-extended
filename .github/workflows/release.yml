@@ -18,10 +18,10 @@ permissions:
 
 jobs:
   check-version:
-    runs-on: [ubuntu-22.04]
+    runs-on: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
 
       - name: Get package version
         working-directory: packages/tree_clipper/
@@ -62,13 +62,13 @@ jobs:
   publish-package:
     if: ${{ github.event.inputs.pypi == 'true' }}
     needs: [build-package]
-    runs-on: [ubuntu-22.04]
+    runs-on: [ubuntu-lastest]
     environment: pypi
     permissions:
       id-token: write  # required for Trusted Publishing
     steps:
       - name: Download dists
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: tree-clipper-package
           path: dist/
@@ -82,14 +82,14 @@ jobs:
 
   release-extension:
     needs: [bundle-extension]
-    runs-on: [ubuntu-22.04]
+    runs-on: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
 
       - name: Clear release directory
         run: rm -rf release
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: tree-clipper-extension
           path: release/
@@ -104,7 +104,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: ${{ github.event.inputs.draft }}
           prerelease: ${{ github.event.inputs.prerelease }}
