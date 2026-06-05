@@ -106,6 +106,7 @@ TEXTBOX_STATE = "textbox_state"
 SAMPLE_ATTRIBUTE_ITEMS = "sample_attribute_items"
 OPERATION = "operation"
 SUBSURFACE_METHOD = "subsurface_method"
+SOCKET_IDNAME = "socket_idname"
 
 
 # this might not be needed anymore in many cases, because
@@ -361,6 +362,11 @@ class TreeSocketExporter(SpecificExporter[bpy.types.NodeTreeInterfaceSocket]):
 
     def serialize(self):
         data = self.export_all_simple_writable_properties_and_list([IN_OUT, ITEM_TYPE])
+
+        # https://github.com/Algebraic-UG/tree_clipper/issues/203
+        if DEFAULT_INPUT not in data:
+            data[DEFAULT_INPUT] = "VALUE"
+
         if self.obj.parent.index >= 0:  # ty:ignore[possibly-missing-attribute]
             no_clobber(data, PARENT_INDEX, self.obj.parent.index)  # ty:ignore[possibly-missing-attribute]
 
@@ -1234,6 +1240,9 @@ class RerouteExporter(SpecificExporter[bpy.types.NodeReroute]):
 
         # https://github.com/Algebraic-UG/tree_clipper/issues/98
         data.pop(WIDTH)
+
+        # https://github.com/Algebraic-UG/tree_clipper/issues/203
+        data.pop(SOCKET_IDNAME)
 
         no_clobber(
             data,
