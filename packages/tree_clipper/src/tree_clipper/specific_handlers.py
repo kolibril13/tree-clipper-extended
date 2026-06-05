@@ -103,6 +103,7 @@ ALIGN_X = "align_x"
 ALIGN_Y = "align_y"
 PIVOT_MODE = "pivot_mode"
 TEXTBOX_STATE = "textbox_state"
+SAMPLE_ATTRIBUTE_ITEMS = "sample_attribute_items"
 
 
 # this might not be needed anymore in many cases, because
@@ -1928,6 +1929,45 @@ if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 1) or bpy.app.version[0] >
                 return
 
             self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+            _import_node_parent(self)
+
+
+if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[0] > 5:
+
+    class RaycastSampleAttributeItemExporter(
+        SpecificExporter[bpy.types.NodeRaycastSampleAttributeItem]
+    ):
+        def serialize(self):
+            return self.export_all_simple_writable_properties()
+
+    class RaycastSampleAttributeItemsImporter(
+        SpecificImporter[bpy.types.NodeRaycastSampleAttributeItems]
+    ):
+        def deserialize(self):
+            self.getter().clear()
+            for item in self.serialization[ITEMS]:
+                name = _or_default(
+                    item[DATA], bpy.types.NodeRaycastSampleAttributeItem, NAME
+                )
+                socket_type = _map_attribute_type_to_socket_type(
+                    _or_default(
+                        item[DATA],
+                        bpy.types.NodeGeometryCaptureAttributeItem,
+                        DATA_TYPE,
+                    )
+                )
+                if self.importer.debug_prints:
+                    print(
+                        f"{self.from_root.to_str()}: adding item {name} {socket_type}"
+                    )
+                self.getter().new(socket_type=socket_type, name=name)
+
+    class RaycastImporter(SpecificImporter[bpy.types.ShaderNodeRaycast]):
+        def deserialize(self):
+            self.import_all_simple_writable_properties_and_list(
+                # ordering is important, the sample_attribute_items implicitly create sockets
+                [SAMPLE_ATTRIBUTE_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS]
+            )
             _import_node_parent(self)
 
 
