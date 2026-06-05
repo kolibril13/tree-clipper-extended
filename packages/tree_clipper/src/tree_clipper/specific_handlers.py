@@ -549,7 +549,9 @@ class LinksImporter(SpecificImporter[bpy.types.NodeLinks]):
                             f"Removing link from/to disabled for backward compatibility: {link[ID]}"
                         )
             self.serialization[ITEMS] = [
-                l for l in self.serialization[ITEMS] if not connected_to_disabled(l)
+                link
+                for link in self.serialization[ITEMS]
+                if not connected_to_disabled(link)
             ]
 
         multi_links = []
