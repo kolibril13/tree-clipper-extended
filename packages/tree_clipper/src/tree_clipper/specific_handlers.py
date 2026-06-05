@@ -1970,6 +1970,40 @@ if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[0] >
             )
             _import_node_parent(self)
 
+    class ClosureToListItemExporter(
+        SpecificExporter[bpy.types.GeometryNodeClosureToListItem]
+    ):
+        def serialize(self):
+            return self.export_all_simple_writable_properties()
+
+    class ClosureToListItemsImporter(
+        SpecificImporter[bpy.types.GeometryNodeClosureToListItems]
+    ):
+        def deserialize(self):
+            self.getter().clear()
+            for item in self.serialization[ITEMS]:
+                name = _or_default(
+                    item[DATA], bpy.types.GeometryNodeClosureToListItem, NAME
+                )
+                socket_type = _or_default(
+                    item[DATA],
+                    bpy.types.GeometryNodeClosureToListItem,
+                    SOCKET_TYPE,
+                )
+                if self.importer.debug_prints:
+                    print(
+                        f"{self.from_root.to_str()}: adding item {name} {socket_type}"
+                    )
+                self.getter().new(socket_type=socket_type, name=name)
+
+    class ClosureToListImporter(SpecificImporter[bpy.types.GeometryNodeClosureToList]):
+        def deserialize(self):
+            self.import_all_simple_writable_properties_and_list(
+                # ordering is important, the list_items implicitly create sockets
+                [LIST_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS]
+            )
+            _import_node_parent(self)
+
 
 # now they are cooked and ready to use ~ bon appétit
 BUILT_IN_EXPORTER = _BUILT_IN_EXPORTER
