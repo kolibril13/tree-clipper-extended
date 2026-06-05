@@ -405,6 +405,8 @@ class NodeImporter(SpecificImporter[bpy.types.Node]):
         # this is the case for many node types that would otherwise need a specific handler
         if DATA_TYPE in self.serialization:
             self.import_properties_from_id_list([DATA_TYPE])
+        if SOCKET_TYPE in self.serialization:
+            self.import_properties_from_id_list([SOCKET_TYPE])
         if OPERATION in self.serialization:
             self.import_properties_from_id_list([OPERATION])
 
