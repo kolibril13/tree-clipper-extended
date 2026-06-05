@@ -198,9 +198,9 @@ class Exporter:
 
         # https://github.com/Algebraic-UG/tree_clipper/issues/112
         if prop.identifier == DEFAULT_VALUE and hasattr(obj, DIMENSIONS):
-            assert prop.is_array  # ty:ignore[possibly-missing-attribute]
+            assert prop.is_array  # ty:ignore[unresolved-attribute]
             dimensions = obj.dimensions
-            if len(attribute) > dimensions:  # ty:ignore[unsupported-operator, invalid-argument-type]
+            if len(attribute) > dimensions:  # ty:ignore[unsupported-operator]
                 warning = f"{from_root.to_str()}: fixing dimension mismatch"
                 self.report.warnings.append(warning)
                 if self.debug_prints:
@@ -644,7 +644,7 @@ class ExportIntermediate:
     def step(self) -> bool:
         if self.unexported_trees:
             tree, from_root = self.unexported_trees.pop(0)
-            self.data[TREES].append(  # ty:ignore[possibly-missing-attribute]
+            self.data[TREES].append(  # ty:ignore[unresolved-attribute]
                 self.exporter._export_node_tree(node_tree=tree, from_root=from_root)
             )
             return True

@@ -1,6 +1,6 @@
 import bpy
 
-from typing import Type
+from typing import Type, Any
 
 from .specific_abstract import (
     _BUILT_IN_EXPORTER,
@@ -8,6 +8,8 @@ from .specific_abstract import (
     SpecificExporter,
     SpecificImporter,
 )
+
+from .import_nodes import Importer
 
 from .common import (
     DATA,
@@ -100,6 +102,11 @@ OVERFLOW = "overflow"
 ALIGN_X = "align_x"
 ALIGN_Y = "align_y"
 PIVOT_MODE = "pivot_mode"
+TEXTBOX_STATE = "textbox_state"
+SAMPLE_ATTRIBUTE_ITEMS = "sample_attribute_items"
+OPERATION = "operation"
+SUBSURFACE_METHOD = "subsurface_method"
+SOCKET_IDNAME = "socket_idname"
 
 
 # this might not be needed anymore in many cases, because
@@ -121,7 +128,7 @@ def _import_node_parent(specific_importer: SpecificImporter) -> None:
     def deferred():
         specific_importer.getter().parent = specific_importer.importer.getters[
             parent_id
-        ]()  # ty: ignore[invalid-assignment]
+        ]()
 
     specific_importer.importer.defer_after_nodes_before_links.append(deferred)
 
@@ -257,7 +264,7 @@ class NodeTreeImporter(SpecificImporter[bpy.types.NodeTree]):
         self.importer.set_auto_remove.clear()
 
 
-class NodesImporter(SpecificImporter[bpy.types.Nodes]):
+class NodesImporter(SpecificImporter[bpy.types.Nodes]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
         self.getter().clear()
         active_id = self.serialization.get(ACTIVE, None)
@@ -345,8 +352,8 @@ class TreePanelExporter(SpecificExporter[bpy.types.NodeTreeInterfacePanel]):
 
     def serialize(self):
         data = self.export_all_simple_writable_properties_and_list([ITEM_TYPE])
-        if self.obj.parent.index >= 0:  # ty:ignore[possibly-missing-attribute]
-            no_clobber(data, PARENT_INDEX, self.obj.parent.index)  # ty:ignore[possibly-missing-attribute]
+        if self.obj.parent.index >= 0:  # ty:ignore[unresolved-attribute]
+            no_clobber(data, PARENT_INDEX, self.obj.parent.index)  # ty:ignore[unresolved-attribute]
         return data
 
 
@@ -355,8 +362,13 @@ class TreeSocketExporter(SpecificExporter[bpy.types.NodeTreeInterfaceSocket]):
 
     def serialize(self):
         data = self.export_all_simple_writable_properties_and_list([IN_OUT, ITEM_TYPE])
-        if self.obj.parent.index >= 0:  # ty:ignore[possibly-missing-attribute]
-            no_clobber(data, PARENT_INDEX, self.obj.parent.index)  # ty:ignore[possibly-missing-attribute]
+
+        # https://github.com/Algebraic-UG/tree_clipper/issues/203
+        if DEFAULT_INPUT not in data:
+            data[DEFAULT_INPUT] = "VALUE"
+
+        if self.obj.parent.index >= 0:  # ty:ignore[unresolved-attribute]
+            no_clobber(data, PARENT_INDEX, self.obj.parent.index)  # ty:ignore[unresolved-attribute]
 
         # https://github.com/Algebraic-UG/tree_clipper/issues/111
         if isinstance(self.exporter.current_tree, bpy.types.ShaderNodeTree):
@@ -399,6 +411,10 @@ class NodeImporter(SpecificImporter[bpy.types.Node]):
         # this is the case for many node types that would otherwise need a specific handler
         if DATA_TYPE in self.serialization:
             self.import_properties_from_id_list([DATA_TYPE])
+        if SOCKET_TYPE in self.serialization:
+            self.import_properties_from_id_list([SOCKET_TYPE])
+        if OPERATION in self.serialization:
+            self.import_properties_from_id_list([OPERATION])
 
         self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
         _import_node_parent(self)
@@ -436,28 +452,51 @@ class TextureNodeGroupImporter(SpecificImporter[bpy.types.TextureNodeGroup]):
         _import_node_parent(self)
 
 
-class NodeInputsImporter(SpecificImporter[bpy.types.NodeInputs]):
+# https://github.com/Algebraic-UG/tree_clipper/issues/205
+def remove_disabled_in_old_file(importer: Importer, serialization: dict[str, Any]):
+    if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[0] > 5:
+        if importer.blender_version[0] == 5 and importer.blender_version[1] < 2:
+            for disabled in [
+                s[ID] for s in serialization[ITEMS] if not s[DATA][ENABLED]
+            ]:
+                if importer.debug_prints:
+                    print(
+                        f"Removing disabled socket for backward compatibility: {disabled}"
+                    )
+                if disabled in importer.disabled_ids:
+                    raise RuntimeError("Double disabled: {disabled}")
+                importer.disabled_ids.add(disabled)
+            serialization[ITEMS] = [s for s in serialization[ITEMS] if s[DATA][ENABLED]]
+
+
+class NodeInputsImporter(SpecificImporter[bpy.types.NodeInputs]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
         expected = len(self.serialization[ITEMS])
         current = len(self.getter())
         if current != expected:
-            raise RuntimeError(
-                f"""{self.from_root.to_str()}
+            remove_disabled_in_old_file(self.importer, self.serialization)
+            expected = len(self.serialization[ITEMS])
+            if current != expected:
+                raise RuntimeError(
+                    f"""{self.from_root.to_str()}
 expected {expected} in-sockets but found {current}
 we currently don't support creating sockets"""
-            )
+                )
 
 
-class NodeOutputsImporter(SpecificImporter[bpy.types.NodeOutputs]):
+class NodeOutputsImporter(SpecificImporter[bpy.types.NodeOutputs]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
         expected = len(self.serialization[ITEMS])
         current = len(self.getter())
         if current != expected:
-            raise RuntimeError(
-                f"""{self.from_root.to_str()}
+            remove_disabled_in_old_file(self.importer, self.serialization)
+            expected = len(self.serialization[ITEMS])
+            if current != expected:
+                raise RuntimeError(
+                    f"""{self.from_root.to_str()}
 expected {expected} out-sockets but found {current}
 we currently don't support creating sockets"""
-            )
+                )
 
 
 class SocketExporter(SpecificExporter[bpy.types.NodeSocket]):
@@ -492,7 +531,7 @@ class SocketImporter(SpecificImporter[bpy.types.NodeSocket]):
 class LinkExporter(SpecificExporter[bpy.types.NodeLink]):
     def serialize(self):
         # https://github.com/Algebraic-UG/tree_clipper/issues/114
-        if self.obj.to_socket.is_multi_input:  # ty:ignore[possibly-missing-attribute]
+        if self.obj.to_socket.is_multi_input:  # ty:ignore[unresolved-attribute]
             additional_props = [MULTI_INPUT_SORT_ID]
         else:
             additional_props = []
@@ -502,10 +541,33 @@ class LinkExporter(SpecificExporter[bpy.types.NodeLink]):
         )
 
 
-class LinksImporter(SpecificImporter[bpy.types.NodeLinks]):
+class LinksImporter(SpecificImporter[bpy.types.NodeLinks]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/205
+            def connected_to_disabled(link):
+                return (
+                    link[DATA][FROM_SOCKET] in self.importer.disabled_ids
+                    or link[DATA][TO_SOCKET] in self.importer.disabled_ids
+                )
+
+            if self.importer.debug_prints:
+                for link in self.serialization[ITEMS]:
+                    if connected_to_disabled(link):
+                        print(
+                            f"Removing link from/to disabled for backward compatibility: {link[ID]}"
+                        )
+            self.serialization[ITEMS] = [
+                link
+                for link in self.serialization[ITEMS]
+                if not connected_to_disabled(link)
+            ]
+
         multi_links = []
         for i, link in enumerate(self.serialization[ITEMS]):
+            if self.importer.debug_prints:
+                print(f"{self.from_root.to_str()}: Importing link {link[ID]}")
+
             data = link[DATA]
             from_socket_id = data[FROM_SOCKET]
             to_socket_id = data[TO_SOCKET]
@@ -528,7 +590,7 @@ class LinksImporter(SpecificImporter[bpy.types.NodeLinks]):
 
             if self.importer.debug_prints:
                 print(
-                    f"{self.from_root.to_str()}: linking {from_node.name}, {from_socket.identifier} to {to_node.name}, {to_socket.identifier}"  # ty:ignore[possibly-missing-attribute]
+                    f"{self.from_root.to_str()}: linking {from_node.name}, {from_socket.identifier} to {to_node.name}, {to_socket.identifier}"  # ty:ignore[unresolved-attribute]
                 )
 
             self.getter().new(input=from_socket, output=to_socket)
@@ -595,7 +657,7 @@ class MenuSwitchImporter(SpecificImporter[bpy.types.GeometryNodeMenuSwitch]):
         _import_node_parent(self)
 
 
-class MenuSwitchItemsImporter(SpecificImporter[bpy.types.NodeMenuSwitchItems]):
+class MenuSwitchItemsImporter(SpecificImporter[bpy.types.NodeMenuSwitchItems]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
         self.getter().clear()
         for item in self.serialization[ITEMS]:
@@ -622,8 +684,199 @@ class CaptureAttrExporter(SpecificExporter[bpy.types.GeometryNodeCaptureAttribut
         )
 
 
+def compat_5_1(importer: Importer) -> bool:
+    current_is_at_least_5_2 = (
+        bpy.app.version[0] == 5 and bpy.app.version[1] >= 2
+    ) or bpy.app.version[0] > 5
+    import_is_at_most_5_1 = (
+        importer.blender_version[0] == 5 and importer.blender_version[1] < 2
+    )
+    return current_is_at_least_5_2 and import_is_at_most_5_1
+
+
+class CameraInfoImporter(SpecificImporter[bpy.types.GeometryNodeCameraInfo]):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/212
+            self.serialization[OUTPUTS][DATA][ITEMS][2][DATA][DEFAULT_VALUE].pop()
+            self.serialization[OUTPUTS][DATA][ITEMS][3][DATA][DEFAULT_VALUE].pop()
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
+FAKE_MODE_SOCKET = {
+    "id": -1,
+    "data": {
+        "name": "Mode",
+        "description": "",
+        "hide": False,
+        "enabled": True,
+        "link_limit": 1,
+        "show_expanded": False,
+        "hide_value": False,
+        "pin_gizmo": False,
+        "type": "MENU",
+        "display_shape": "CIRCLE",
+        "default_value": "From Start",
+    },
+}
+
+
+class FindInStringImporter(SpecificImporter[bpy.types.FunctionNodeFindInString]):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/182
+            self.serialization[INPUTS][DATA][ITEMS].insert(2, FAKE_MODE_SOCKET)
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
+class InputStringImporter(SpecificImporter[bpy.types.FunctionNodeInputString]):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/211
+            self.serialization[TEXTBOX_STATE] = None
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
+FAKE_BASE_SOCKET = {
+    "id": -1,
+    "data": {
+        "name": "Base",
+        "description": "",
+        "hide": False,
+        "enabled": True,
+        "link_limit": 1,
+        "show_expanded": False,
+        "hide_value": False,
+        "pin_gizmo": False,
+        "type": "INT",
+        "display_shape": "CIRCLE",
+        "default_value": 10,
+    },
+}
+
+FAKE_PADDING_SOCKET = {
+    "id": -1,
+    "data": {
+        "name": "Padding",
+        "description": "",
+        "hide": False,
+        "enabled": True,
+        "link_limit": 1,
+        "show_expanded": False,
+        "hide_value": False,
+        "pin_gizmo": False,
+        "type": "INT",
+        "display_shape": "CIRCLE",
+        "default_value": 0,
+    },
+}
+
+
+class ValueToStringImporter(SpecificImporter[bpy.types.FunctionNodeValueToString]):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/197
+            self.serialization[INPUTS][DATA][ITEMS].insert(2, FAKE_BASE_SOCKET)
+            self.serialization[INPUTS][DATA][ITEMS].insert(3, FAKE_PADDING_SOCKET)
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
+class StringToValueImporter(SpecificImporter[bpy.types.FunctionNodeStringToValue]):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/198
+            self.serialization[INPUTS][DATA][ITEMS].insert(1, FAKE_BASE_SOCKET)
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
+FAKE_QUALITY_SOCKET = {
+    "id": -1,
+    "data": {
+        "name": "Quality",
+        "description": "",
+        "hide": False,
+        "enabled": True,
+        "link_limit": 1,
+        "show_expanded": False,
+        "hide_value": False,
+        "pin_gizmo": False,
+        "type": "INT",
+        "display_shape": "LINE",
+        "default_value": 3,
+    },
+}
+
+
+class SubdivisionSurfaceImporter(
+    SpecificImporter[bpy.types.GeometryNodeSubdivisionSurface]
+):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/210
+            self.serialization[INPUTS][DATA][ITEMS].insert(5, FAKE_QUALITY_SOCKET)
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
+FAKE_THIN_WALL_SOCKET = {
+    "id": -1,
+    "data": {
+        "name": "Thin Wall",
+        "description": "",
+        "hide": False,
+        "enabled": True,
+        "link_limit": 1,
+        "show_expanded": False,
+        "hide_value": False,
+        "pin_gizmo": False,
+        "type": "BOOLEAN",
+        "display_shape": "CIRCLE",
+        "default_value": False,
+    },
+}
+
+
+class PrincipledBSDFImporter(SpecificImporter[bpy.types.ShaderNodeBsdfPrincipled]):
+    def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/209
+            self.serialization[INPUTS][DATA][ITEMS].insert(5, FAKE_THIN_WALL_SOCKET)
+            if self.serialization[SUBSURFACE_METHOD] == "RANDOM_WALK":
+                self.serialization[SUBSURFACE_METHOD] = "RANDOM_WALK_LEGACY"
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
+FAKE_SELECTION_SOCKET = {
+    "id": -1,
+    "data": {
+        "name": "Selection",
+        "description": "",
+        "hide": False,
+        "enabled": True,
+        "link_limit": 1,
+        "show_expanded": False,
+        "hide_value": True,
+        "pin_gizmo": False,
+        "type": "BOOLEAN",
+        "display_shape": "DIAMOND",
+        "default_value": True,  # maybe this should be false for output
+    },
+}
+
+
 class CaptureAttrImporter(SpecificImporter[bpy.types.GeometryNodeCaptureAttribute]):
     def deserialize(self):
+        if compat_5_1(self.importer):
+            # https://github.com/Algebraic-UG/tree_clipper/issues/208
+            self.serialization[INPUTS][DATA][ITEMS].insert(1, FAKE_SELECTION_SOCKET)
+            self.serialization[OUTPUTS][DATA][ITEMS].insert(1, FAKE_SELECTION_SOCKET)
+
         self.import_all_simple_writable_properties_and_list(
             # ordering is important, the capture_items implicitly create sockets
             [CAPTURE_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS],
@@ -632,7 +885,7 @@ class CaptureAttrImporter(SpecificImporter[bpy.types.GeometryNodeCaptureAttribut
 
 
 class CaptureAttrItemsImporter(
-    SpecificImporter[bpy.types.NodeGeometryCaptureAttributeItems]
+    SpecificImporter[bpy.types.NodeGeometryCaptureAttributeItems]  # ty:ignore[invalid-type-arguments]
 ):
     def deserialize(self):
         self.getter().clear()
@@ -673,7 +926,7 @@ class RepeatInputImporter(SpecificImporter[bpy.types.GeometryNodeRepeatInput]):
 
         def deferred():
             if not self.getter().pair_with_output(
-                self.importer.current_tree.nodes[output]  # ty:ignore[possibly-missing-attribute]
+                self.importer.current_tree.nodes[output]  # ty:ignore[unresolved-attribute]
             ):
                 raise RuntimeError(
                     f"{self.from_root.to_str()}: failed to pair with {output}"
@@ -704,7 +957,7 @@ class RepeatOutputImporter(SpecificImporter[bpy.types.GeometryNodeRepeatOutput])
 
 
 class RepeatOutputItemsImporter(
-    SpecificImporter[bpy.types.NodeGeometryRepeatOutputItems]
+    SpecificImporter[bpy.types.NodeGeometryRepeatOutputItems]  # ty:ignore[invalid-type-arguments]
 ):
     def deserialize(self):
         self.getter().clear()
@@ -731,7 +984,7 @@ class IndexItemExporter(SpecificExporter[bpy.types.IndexSwitchItem]):
         return {}
 
 
-class IndexItemsImporter(SpecificImporter[bpy.types.NodeIndexSwitchItems]):
+class IndexItemsImporter(SpecificImporter[bpy.types.NodeIndexSwitchItems]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
         self.getter().clear()
         for _ in self.serialization[ITEMS]:
@@ -757,7 +1010,7 @@ class ViewerImporter(SpecificImporter[bpy.types.GeometryNodeViewer]):
         _import_node_parent(self)
 
 
-class ViewerItemsImporter(SpecificImporter[bpy.types.NodeGeometryViewerItems]):
+class ViewerItemsImporter(SpecificImporter[bpy.types.NodeGeometryViewerItems]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
         self.getter().clear()
         for item in self.serialization[ITEMS]:
@@ -792,7 +1045,7 @@ class ColorRampElementExporter(SpecificExporter[bpy.types.ColorRampElement]):
         return self.export_all_simple_writable_properties()
 
 
-class ColorRampElementsImporter(SpecificImporter[bpy.types.ColorRampElements]):
+class ColorRampElementsImporter(SpecificImporter[bpy.types.ColorRampElements]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
         # Can't start from zero here https://projects.blender.org/blender/blender/issues/150171
         number_needed = len(self.serialization[ITEMS])
@@ -840,7 +1093,7 @@ class SimulationInputImporter(SpecificImporter[bpy.types.GeometryNodeSimulationI
 
         def deferred():
             if not self.getter().pair_with_output(
-                self.importer.current_tree.nodes[output]  # ty:ignore[possibly-missing-attribute]
+                self.importer.current_tree.nodes[output]  # ty:ignore[unresolved-attribute]
             ):
                 raise RuntimeError(
                     f"{self.from_root.to_str()}: failed to pair with {output}"
@@ -875,7 +1128,7 @@ class SimulationOutputImporter(
 
 
 class SimulationOutputItemsImporter(
-    SpecificImporter[bpy.types.NodeGeometrySimulationOutputItems]
+    SpecificImporter[bpy.types.NodeGeometrySimulationOutputItems]  # ty:ignore[invalid-type-arguments]
 ):
     def deserialize(self):
         self.getter().clear()
@@ -914,7 +1167,7 @@ class NodeClosureInputImporter(SpecificImporter[bpy.types.NodeClosureInput]):
 
         def deferred():
             if not self.getter().pair_with_output(
-                self.importer.current_tree.nodes[output]  # ty:ignore[possibly-missing-attribute]
+                self.importer.current_tree.nodes[output]  # ty:ignore[unresolved-attribute]
             ):
                 raise RuntimeError(
                     f"{self.from_root.to_str()}: failed to pair with {output}"
@@ -951,7 +1204,7 @@ class NodeClosureOutputImporter(SpecificImporter[bpy.types.NodeClosureOutput]):
         _import_node_parent(self)
 
 
-class NodeClosureInputItems(SpecificImporter[bpy.types.NodeClosureInputItems]):
+class NodeClosureInputItems(SpecificImporter[bpy.types.NodeClosureInputItems]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
         self.getter().clear()
         for item in self.serialization[ITEMS]:
@@ -964,7 +1217,7 @@ class NodeClosureInputItems(SpecificImporter[bpy.types.NodeClosureInputItems]):
             self.getter().new(socket_type=socket_type, name=name)
 
 
-class NodeClosureOutputItems(SpecificImporter[bpy.types.NodeClosureOutputItems]):
+class NodeClosureOutputItems(SpecificImporter[bpy.types.NodeClosureOutputItems]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
         self.getter().clear()
         for item in self.serialization[ITEMS]:
@@ -987,6 +1240,9 @@ class RerouteExporter(SpecificExporter[bpy.types.NodeReroute]):
 
         # https://github.com/Algebraic-UG/tree_clipper/issues/98
         data.pop(WIDTH)
+
+        # https://github.com/Algebraic-UG/tree_clipper/issues/203
+        data.pop(SOCKET_IDNAME)
 
         no_clobber(
             data,
@@ -1026,7 +1282,7 @@ class CurveMapPointExporter(SpecificExporter[bpy.types.CurveMapPoint]):
         return self.export_all_simple_writable_properties()
 
 
-class CurveMapPointsImporter(SpecificImporter[bpy.types.CurveMapPoints]):
+class CurveMapPointsImporter(SpecificImporter[bpy.types.CurveMapPoints]):  # ty:ignore[invalid-type-arguments]
     f"""The {LOCATION} needs to be picked apart into argumets
 and there are always at least two points.
 We remove all but two and skip first and last from the serialization."""
@@ -1097,7 +1353,7 @@ class EvalClosureInputItemExporter(
 
 
 class EvalClosureInputItemsImporter(
-    SpecificImporter[bpy.types.NodeEvaluateClosureInputItems]
+    SpecificImporter[bpy.types.NodeEvaluateClosureInputItems]  # ty:ignore[invalid-type-arguments]
 ):
     def deserialize(self):
         self.getter().clear()
@@ -1117,7 +1373,7 @@ class EvalClosureOutputItemExporter(
 
 
 class EvalClosureOutputItemsImporter(
-    SpecificImporter[bpy.types.NodeEvaluateClosureOutputItems]
+    SpecificImporter[bpy.types.NodeEvaluateClosureOutputItems]  # ty:ignore[invalid-type-arguments]
 ):
     def deserialize(self):
         self.getter().clear()
@@ -1144,7 +1400,7 @@ class FormatStringItemExporter(
 
 
 class FormatStringItemsImporter(
-    SpecificImporter[bpy.types.NodeFunctionFormatStringItems]
+    SpecificImporter[bpy.types.NodeFunctionFormatStringItems]  # ty:ignore[invalid-type-arguments]
 ):
     def deserialize(self):
         self.getter().clear()
@@ -1168,7 +1424,7 @@ class CombineBundleItemExporter(SpecificExporter[bpy.types.NodeCombineBundleItem
         return self.export_all_simple_writable_properties()
 
 
-class CombineBundleItemsImporter(SpecificImporter[bpy.types.NodeCombineBundleItems]):
+class CombineBundleItemsImporter(SpecificImporter[bpy.types.NodeCombineBundleItems]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
         self.getter().clear()
         for item in self.serialization[ITEMS]:
@@ -1191,7 +1447,7 @@ class SeparateBundleItemExporter(SpecificExporter[bpy.types.NodeSeparateBundleIt
         return self.export_all_simple_writable_properties()
 
 
-class SeparateBundleItemsImporter(SpecificImporter[bpy.types.NodeSeparateBundleItems]):
+class SeparateBundleItemsImporter(SpecificImporter[bpy.types.NodeSeparateBundleItems]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
         self.getter().clear()
         for item in self.serialization[ITEMS]:
@@ -1316,7 +1572,7 @@ class ForEachInputImporter(
 
         def deferred():
             if not self.getter().pair_with_output(
-                self.importer.current_tree.nodes[output]  # ty:ignore[possibly-missing-attribute]
+                self.importer.current_tree.nodes[output]  # ty:ignore[unresolved-attribute]
             ):
                 raise RuntimeError(
                     f"{self.from_root.to_str()}: failed to pair with {output}"
@@ -1357,7 +1613,7 @@ class GenerationItemExporter(
 
 
 class GenerationItemsImporter(
-    SpecificImporter[bpy.types.NodeGeometryForeachGeometryElementGenerationItems]
+    SpecificImporter[bpy.types.NodeGeometryForeachGeometryElementGenerationItems]  # ty:ignore[invalid-type-arguments]
 ):
     def deserialize(self):
         self.getter().clear()
@@ -1373,7 +1629,7 @@ class InputItemExporter(SpecificExporter[bpy.types.ForeachGeometryElementInputIt
 
 
 class InputItemsImporter(
-    SpecificImporter[bpy.types.NodeGeometryForeachGeometryElementInputItems]
+    SpecificImporter[bpy.types.NodeGeometryForeachGeometryElementInputItems]  # ty:ignore[invalid-type-arguments]
 ):
     def deserialize(self):
         self.getter().clear()
@@ -1389,7 +1645,7 @@ class MainItemExporter(SpecificExporter[bpy.types.ForeachGeometryElementMainItem
 
 
 class MainItemsImporter(
-    SpecificImporter[bpy.types.NodeGeometryForeachGeometryElementMainItems]
+    SpecificImporter[bpy.types.NodeGeometryForeachGeometryElementMainItems]  # ty:ignore[invalid-type-arguments]
 ):
     def deserialize(self):
         self.getter().clear()
@@ -1424,7 +1680,7 @@ class BakeItemExporter(SpecificExporter[bpy.types.NodeGeometryBakeItem]):
         return self.export_all_simple_writable_properties()
 
 
-class BackeItemsImporter(SpecificImporter[bpy.types.NodeGeometryBakeItems]):
+class BackeItemsImporter(SpecificImporter[bpy.types.NodeGeometryBakeItems]):  # ty:ignore[invalid-type-arguments]
     def deserialize(self):
         self.getter().clear()
         for item in self.serialization[ITEMS]:
@@ -1459,7 +1715,7 @@ class FieldToGridItemExporter(SpecificExporter[bpy.types.GeometryNodeFieldToGrid
 
 
 class FieldToGridItemsImporter(
-    SpecificImporter[bpy.types.GeometryNodeFieldToGridItems]
+    SpecificImporter[bpy.types.GeometryNodeFieldToGridItems]  # ty:ignore[invalid-type-arguments]
 ):
     def deserialize(self):
         self.getter().clear()
@@ -1484,7 +1740,7 @@ class FileOutputItemExporter(SpecificExporter[bpy.types.NodeCompositorFileOutput
 
 
 class FileOutputItmesImporter(
-    SpecificImporter[bpy.types.NodeCompositorFileOutputItems]
+    SpecificImporter[bpy.types.NodeCompositorFileOutputItems]  # ty:ignore[invalid-type-arguments]
 ):
     def deserialize(self):
         self.getter().clear()
@@ -1513,6 +1769,22 @@ class ColorManagedViewSettingsExporter(
         return data
 
 
+class CompareImporter(SpecificImporter[bpy.types.FunctionNodeCompare]):
+    """We need to trigger the choices first"""
+
+    def deserialize(self) -> None:
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
+class RotateEulerImporter(SpecificImporter[bpy.types.FunctionNodeRotateEuler]):
+    """We need to trigger the import of rotation_type first"""
+
+    def deserialize(self) -> None:
+        self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+        _import_node_parent(self)
+
+
 if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 1) or bpy.app.version[0] > 5:
 
     class FieldToListExporter(SpecificExporter[bpy.types.GeometryNodeFieldToList]):
@@ -1537,7 +1809,7 @@ if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 1) or bpy.app.version[0] >
             return self.export_all_simple_writable_properties()
 
     class FieldToListItemsImporter(
-        SpecificImporter[bpy.types.GeometryNodeFieldToListItems]
+        SpecificImporter[bpy.types.GeometryNodeFieldToListItems]  # ty:ignore[invalid-type-arguments]
     ):
         def deserialize(self):
             self.getter().clear()
@@ -1679,6 +1951,109 @@ if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 1) or bpy.app.version[0] >
                 return
 
             self.import_all_simple_writable_properties_and_list([INPUTS, OUTPUTS])
+            _import_node_parent(self)
+
+
+FAKE_ADD_SOCKET = {
+    "id": -1,
+    "data": {
+        "name": "",
+        "description": "",
+        "hide": False,
+        "enabled": True,
+        "link_limit": 4095,
+        "show_expanded": False,
+        "hide_value": False,
+        "pin_gizmo": False,
+        "type": "CUSTOM",
+        "display_shape": "CIRCLE",
+    },
+}
+
+if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[0] > 5:
+
+    class RaycastSampleAttributeItemExporter(
+        SpecificExporter[bpy.types.NodeRaycastSampleAttributeItem]  # ty:ignore[unresolved-attribute]
+    ):
+        def serialize(self):
+            return self.export_all_simple_writable_properties()
+
+    class RaycastSampleAttributeItemsImporter(
+        SpecificImporter[bpy.types.NodeRaycastSampleAttributeItems]  # ty:ignore[unresolved-attribute]
+    ):
+        def deserialize(self):
+            self.getter().clear()
+            for item in self.serialization[ITEMS]:
+                name = _or_default(
+                    item[DATA],
+                    bpy.types.NodeRaycastSampleAttributeItem,  # ty:ignore[unresolved-attribute]
+                    NAME,
+                )
+                socket_type = _map_attribute_type_to_socket_type(
+                    _or_default(
+                        item[DATA],
+                        bpy.types.NodeGeometryCaptureAttributeItem,
+                        DATA_TYPE,
+                    )
+                )
+                if self.importer.debug_prints:
+                    print(
+                        f"{self.from_root.to_str()}: adding item {name} {socket_type}"
+                    )
+                self.getter().new(socket_type=socket_type, name=name)
+
+    class RaycastImporter(SpecificImporter[bpy.types.ShaderNodeRaycast]):
+        def deserialize(self):
+            if compat_5_1(self.importer):
+                # https://github.com/Algebraic-UG/tree_clipper/issues/213
+                self.serialization[SAMPLE_ATTRIBUTE_ITEMS] = {
+                    "id": -1,
+                    "data": {"items": []},
+                }
+                self.serialization[ACTIVE_INDEX] = 0
+                self.serialization[INPUTS][DATA][ITEMS].insert(3, FAKE_ADD_SOCKET)
+                self.serialization[OUTPUTS][DATA][ITEMS].insert(5, FAKE_ADD_SOCKET)
+
+            self.import_all_simple_writable_properties_and_list(
+                # ordering is important, the sample_attribute_items implicitly create sockets
+                [SAMPLE_ATTRIBUTE_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS]
+            )
+            _import_node_parent(self)
+
+    class ClosureToListItemExporter(
+        SpecificExporter[bpy.types.GeometryNodeClosureToListItem]  # ty:ignore[unresolved-attribute]
+    ):
+        def serialize(self):
+            return self.export_all_simple_writable_properties()
+
+    class ClosureToListItemsImporter(
+        SpecificImporter[bpy.types.GeometryNodeClosureToListItems]  # ty:ignore[unresolved-attribute]
+    ):
+        def deserialize(self):
+            self.getter().clear()
+            for item in self.serialization[ITEMS]:
+                name = _or_default(
+                    item[DATA],
+                    bpy.types.GeometryNodeClosureToListItem,  # ty:ignore[unresolved-attribute]
+                    NAME,
+                )
+                socket_type = _or_default(
+                    item[DATA],
+                    bpy.types.GeometryNodeClosureToListItem,  # ty:ignore[unresolved-attribute]
+                    SOCKET_TYPE,
+                )
+                if self.importer.debug_prints:
+                    print(
+                        f"{self.from_root.to_str()}: adding item {name} {socket_type}"
+                    )
+                self.getter().new(socket_type=socket_type, name=name)
+
+    class ClosureToListImporter(SpecificImporter[bpy.types.GeometryNodeClosureToList]):  # ty:ignore[unresolved-attribute]
+        def deserialize(self):
+            self.import_all_simple_writable_properties_and_list(
+                # ordering is important, the list_items implicitly create sockets
+                [LIST_ITEMS, ACTIVE_INDEX, INPUTS, OUTPUTS]
+            )
             _import_node_parent(self)
 
 

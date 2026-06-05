@@ -95,6 +95,13 @@ class Importer:
         # we need to lookup nodes and their sockets for linking them
         self.current_tree = None
 
+        # this is for backward compatibilty
+        # in some cases, disabled sockets do not exist in newer versions
+        # and we remove them from the serialization
+        # if links (or anything) reference them it we can avoid failure by
+        # checking that it's been removed intentionally
+        self.disabled_ids = set()
+
         self.report = ImportReport()
 
     ################################################################################
@@ -150,7 +157,7 @@ class Importer:
 
     def register_as_deserialized(self, *, ident: int, getter: GETTER):
         if ident in self.getters:
-            raise RuntimeError("Double deserialization")
+            raise RuntimeError("Double deserialization: {ident}")
         self.getters[ident] = getter
 
     ################################################################################
@@ -339,9 +346,11 @@ From root: {from_root.to_str()}"""
         if self.debug_prints:
             print(f"{from_root.to_str()}: importing")
 
-        if serialization[ID] in self.getters:
-            raise RuntimeError(f"Double deserialization: {from_root.to_str()}")
-        self.getters[serialization[ID]] = getter
+        # hack for inserting fake stuff for backward compat
+        if serialization[ID] != -1:
+            if serialization[ID] in self.getters:
+                raise RuntimeError(f"Double deserialization: {from_root.to_str()}")
+            self.getters[serialization[ID]] = getter
 
         deserializer(
             self,
@@ -426,16 +435,16 @@ From root: {from_root.to_str()}"""
                         continue
 
                     # https://github.com/Algebraic-UG/tree_clipper/issues/161
-                    if (
-                        prop.type in [PROP_TYPE_POINTER, PROP_TYPE_COLLECTION]
-                        and prop.fixed_type.__module__ != "_bpy_types"
-                    ):
+                    if prop.type in [
+                        PROP_TYPE_POINTER,
+                        PROP_TYPE_COLLECTION,
+                    ] and prop.fixed_type.__module__ not in ["_bpy_types", "bpy.types"]:  # ty:ignore[unresolved-attribute]
                         self.report.warnings.append(
                             f"""This property is missing in serialization.
 It appears to be from a third-party addon: {prop.fixed_type.__module__}
 
 Tree Clipper is skipping it.
-{prop_from_root.to_str()}"""
+{prop_from_root.to_str()}"""  # ty:ignore[unresolved-attribute]
                         )
                         continue
 
@@ -496,7 +505,7 @@ Tree Clipper is skipping it.
             self.report.rename_material = (original_name, name)
 
             def getter() -> bpy.types.ShaderNodeTree:
-                return bpy.data.materials[name].node_tree  # type: ignore
+                return bpy.data.materials[name].node_tree
 
         if self.debug_prints:
             print(f"{from_root.to_str()}: entering")
@@ -630,7 +639,7 @@ class ImportIntermediate:
             no_clobber(
                 self.getters,
                 external_id,
-                make_id_data_getter(external_item),
+                make_id_data_getter(external_item),  # ty:ignore[invalid-argument-type]
             )
 
         # double check that only skipped ones are missing

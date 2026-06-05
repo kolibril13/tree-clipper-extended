@@ -14,8 +14,7 @@ _PAIRED_NODE_TYPES = {
 
 def test_all_nodes(node_type: Type[bpy.types.Node]):
     try:
-        # these can't be instantiated
-        if node_type in [
+        ignore = [
             bpy.types.NodeGroup,
             bpy.types.NodeCustomGroup,
             bpy.types.GeometryNodeCustomGroup,
@@ -26,7 +25,13 @@ def test_all_nodes(node_type: Type[bpy.types.Node]):
             bpy.types.TextureNodeDecompose,
             # TODO: there is a "Gamma" node in the compositor, but it's the "shader version"
             bpy.types.CompositorNodeGamma,
-        ]:
+        ]
+        if (bpy.app.version[0] == 5 and bpy.app.version[1] >= 2) or bpy.app.version[
+            0
+        ] > 5:
+            ignore.append(bpy.types.GeometryNodeApplySimulatedData)  # ty:ignore[unresolved-attribute]
+        # these can't be instantiated
+        if node_type in ignore:
             return
         # skip the output types of the pairs
         if node_type in _PAIRED_NODE_TYPES.values():
@@ -48,8 +53,8 @@ def test_all_nodes(node_type: Type[bpy.types.Node]):
         # these need to be tested in combination with the outputs
         if node_type in _PAIRED_NODE_TYPES.keys():
             output_type = _PAIRED_NODE_TYPES[node_type]
-            output_node = tree.nodes.new(type=output_type.bl_rna.identifier)  # ty: ignore[possibly-missing-attribute]
-            tree.nodes[0].pair_with_output(output_node)  # ty: ignore[unresolved-attribute]
+            output_node = tree.nodes.new(type=output_type.bl_rna.identifier)  # ty: ignore[unresolved-attribute]
+            tree.nodes[0].pair_with_output(output_node)
 
         round_trip(original_name=tree.name, is_material=False)
     except:

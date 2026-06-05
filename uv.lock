@@ -2,9 +2,6 @@ version = 1
 revision = 3
 requires-python = "==3.13.*"
 
-[options]
-prerelease-mode = "allow"
-
 [manifest]
 members = [
     "tree-clipper",
@@ -14,19 +11,42 @@ members = [
 ]
 
 [[package]]
+name = "attrs"
+version = "26.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9a/8e/82a0fe20a541c03148528be8cac2408564a6c9a0cc7e9171802bc1d26985/attrs-26.1.0.tar.gz", hash = "sha256:d03ceb89cb322a8fd706d4fb91940737b6642aa36998fe130a9bc96c985eff32", size = 952055, upload-time = "2026-03-19T14:22:25.026Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl", hash = "sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309", size = 67548, upload-time = "2026-03-19T14:22:23.645Z" },
+]
+
+[[package]]
 name = "bpy"
-version = "5.1.0b0"
+version = "5.2.0b0"
 source = { registry = "https://bradyajohnston.github.io/dailybpy/" }
 dependencies = [
+    { name = "cattrs" },
     { name = "cython" },
     { name = "numpy" },
     { name = "requests" },
     { name = "zstandard" },
 ]
 wheels = [
-    { url = "https://github.com/BradyAJohnston/dailybpy/releases/download/daily-2026-02-25/bpy-5.1.0b0-cp313-cp313-macosx_11_0_arm64.whl" },
-    { url = "https://github.com/BradyAJohnston/dailybpy/releases/download/daily-2026-02-25/bpy-5.1.0b0-cp313-cp313-manylinux_2_39_x86_64.whl" },
-    { url = "https://github.com/BradyAJohnston/dailybpy/releases/download/daily-2026-02-25/bpy-5.1.0b0-cp313-cp313-win_amd64.whl" },
+    { url = "https://github.com/BradyAJohnston/dailybpy/releases/download/daily-2026-06-05/bpy-5.2.0b0-cp313-cp313-macosx_11_0_arm64.whl" },
+    { url = "https://github.com/BradyAJohnston/dailybpy/releases/download/daily-2026-06-05/bpy-5.2.0b0-cp313-cp313-manylinux_2_39_x86_64.whl" },
+    { url = "https://github.com/BradyAJohnston/dailybpy/releases/download/daily-2026-06-05/bpy-5.2.0b0-cp313-cp313-win_amd64.whl" },
+]
+
+[[package]]
+name = "cattrs"
+version = "26.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a0/ec/ba18945e7d6e55a58364d9fb2e46049c1c2998b3d805f19b703f14e81057/cattrs-26.1.0.tar.gz", hash = "sha256:fa239e0f0ec0715ba34852ce813986dfed1e12117e209b816ab87401271cdd40", size = 495672, upload-time = "2026-02-18T22:15:19.406Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/80/56/60547f7801b97c67e97491dc3d9ade9fbccbd0325058fd3dfcb2f5d98d90/cattrs-26.1.0-py3-none-any.whl", hash = "sha256:d1e0804c42639494d469d08d4f26d6b9de9b8ab26b446db7b5f8c2e97f7c3096", size = 73054, upload-time = "2026-02-18T22:15:17.958Z" },
 ]
 
 [[package]]
@@ -135,9 +155,22 @@ wheels = [
 
 [[package]]
 name = "numpy"
-version = "1.26.4"
+version = "2.5.0rc1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/65/6e/09db70a523a96d25e115e71cc56a6f9031e7b8cd166c1ac8438307c14058/numpy-1.26.4.tar.gz", hash = "sha256:2a02aba9ed12e4ac4eb3ea9421c420301a0c6460d9830d74a9df87efa4912010", size = 15786129, upload-time = "2024-02-06T00:26:44.495Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d3/e1/f2fe8f6113a657a1da83b358b16755e528a602c6976a43724a88f42b482a/numpy-2.5.0rc1.tar.gz", hash = "sha256:4de3e0d48e58ef53e32c756bddea2722b9dde7ec25f96afc5fe7ece620cc4cb9", size = 20610894, upload-time = "2026-06-02T12:58:09.126Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f9/2c/6735b782a68595ba9cd6f453d5cef8e637b6ee89af3555e8074e5084f188/numpy-2.5.0rc1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:342294d39fbaaf93d33c8950d6b4fb873034e5eabbb67676190dd79c07ba10af", size = 16785923, upload-time = "2026-06-02T12:56:49.319Z" },
+    { url = "https://files.pythonhosted.org/packages/00/24/1864bcfea4adb5fbffdb8063ae7993f537cb168fda1cfadcec3eb1afc940/numpy-2.5.0rc1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:d3b9d87c617fbd05b9afb38cacd56a9f60e2d3c0dd96a7278028a07a1362e948", size = 14802138, upload-time = "2026-06-02T12:56:51.792Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/f5/c15966ab370698ca66c8a64ac86172cbba3b62e9355f51c5b7f4c11a5840/numpy-2.5.0rc1-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:6b29138613d32227696eaad490d136cc114c2b3742cd379509d69cb97c013939", size = 5308122, upload-time = "2026-06-02T12:56:54.318Z" },
+    { url = "https://files.pythonhosted.org/packages/63/46/ab26a2d69fe6babd2883c1d4eead5dfba869525b239e3152c02ea7a92cc7/numpy-2.5.0rc1-cp313-cp313-macosx_14_0_x86_64.whl", hash = "sha256:8954bbb79e6ebc60e218b97168603a02475745b557ee0749f36da131e553fffd", size = 6645557, upload-time = "2026-06-02T12:56:55.908Z" },
+    { url = "https://files.pythonhosted.org/packages/96/a8/e6265c8deacae8445a591186baa507da578eebbb8799a64230119fbdc18a/numpy-2.5.0rc1-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:a8bdefbd3b2c8ec3e060f0aeccbd7db4d10658de34fa9c161304a876d4b7a57f", size = 15149536, upload-time = "2026-06-02T12:56:58.154Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/cb/38e09c2d8d8af874ae9650d51ba74fb65af5e016e10154454e4f585699d7/numpy-2.5.0rc1-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7a4c5bccef100aad3ca67f0c82fec6c9c41d93f45af082765a49248af9e4aa4c", size = 16648175, upload-time = "2026-06-02T12:57:00.909Z" },
+    { url = "https://files.pythonhosted.org/packages/18/b4/74ad66aab93cf2e45b01ffc00b552d988d2d3c7978f3b6f90415adf4529f/numpy-2.5.0rc1-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:fe949230df0a1c10e75e4ddbd0b382f1773c04ff8e4b988b43a3386b80885dd5", size = 16510274, upload-time = "2026-06-02T12:57:03.32Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/c6/9025469bac3f2e11e327058e94e872b08d3e8eb22f9985ae20a05f46edbc/numpy-2.5.0rc1-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:9352b974bded4f5e82dd94c028207bdc26c5051c9aa76508215c8430a9f98047", size = 18406033, upload-time = "2026-06-02T12:57:05.872Z" },
+    { url = "https://files.pythonhosted.org/packages/e1/c8/e19a496ae871db9627f16c52ab7ba5393a2404dccefcc4c295c60b593da6/numpy-2.5.0rc1-cp313-cp313-win32.whl", hash = "sha256:79316ee5595e364c589a7d4b910006a818a2f8455e13ca1b544144d3b26b5c16", size = 6051769, upload-time = "2026-06-02T12:57:08.151Z" },
+    { url = "https://files.pythonhosted.org/packages/31/e6/899d0ae5ca1c12af50c84a251b3a9807326ac6f2549289d3318649b60f1c/numpy-2.5.0rc1-cp313-cp313-win_amd64.whl", hash = "sha256:009be5174f1d8ebcc2f246eb1606c3e695a864f7d79821f3be5d7e2758213753", size = 12411388, upload-time = "2026-06-02T12:57:10.115Z" },
+    { url = "https://files.pythonhosted.org/packages/db/31/aad462df2fda6948de95329dc1cb1d7f45651e51407937266f132b6a3e98/numpy-2.5.0rc1-cp313-cp313-win_arm64.whl", hash = "sha256:cc5330a6613229cc2511dd36578a0eb853e0aa6c248cf8d0a880bd775b8000e3", size = 10334033, upload-time = "2026-06-02T12:57:12.785Z" },
+]
 
 [[package]]
 name = "orderly-set"
@@ -302,7 +335,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bpy", specifier = "==5.1.*" },
+    { name = "bpy", specifier = "==5.2.*" },
     { name = "tree-clipper", editable = "packages/tree_clipper" },
 ]
 
@@ -343,6 +376,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/0d/da/f4ada0fd08a9e4138fe3fd2bcd3797753593f423f19b1634a814b9b2a401/ty-0.0.18-py3-none-win32.whl", hash = "sha256:c5768607c94977dacddc2f459ace6a11a408a0f57888dd59abb62d28d4fee4f7", size = 9677964, upload-time = "2026-02-20T21:51:42.039Z" },
     { url = "https://files.pythonhosted.org/packages/5e/fa/090ed9746e5c59fc26d8f5f96dc8441825171f1f47752f1778dad690b08b/ty-0.0.18-py3-none-win_amd64.whl", hash = "sha256:b78d0fa1103d36fc2fce92f2092adace52a74654ab7884d54cdaec8eb5016a4d", size = 10636576, upload-time = "2026-02-20T21:51:29.159Z" },
     { url = "https://files.pythonhosted.org/packages/92/4f/5dd60904c8105cda4d0be34d3a446c180933c76b84ae0742e58f02133713/ty-0.0.18-py3-none-win_arm64.whl", hash = "sha256:01770c3c82137c6b216aa3251478f0b197e181054ee92243772de553d3586398", size = 10095449, upload-time = "2026-02-20T21:51:34.914Z" },
+]
+
+[[package]]
+name = "typing-extensions"
+version = "4.15.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/94/1a15dd82efb362ac84269196e94cf00f187f7ed21c242792a923cdb1c61f/typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466", size = 109391, upload-time = "2025-08-25T13:49:26.313Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/18/67/36e9267722cc04a6b9f15c7f3441c2363321a3ea07da7ae0c0707beb2a9c/typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548", size = 44614, upload-time = "2025-08-25T13:49:24.86Z" },
 ]
 
 [[package]]

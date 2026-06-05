@@ -1,6 +1,6 @@
 import deepdiff
 import bpy
-import _rna_info as rna_info  # ty:ignore[unresolved-import]
+import _rna_info as rna_info
 
 from tree_clipper.dynamic_pointer import KNOWN_POINTABLES
 
