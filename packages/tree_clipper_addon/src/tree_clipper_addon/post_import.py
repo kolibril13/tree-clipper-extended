@@ -37,6 +37,13 @@ def post_import(
         if imported_root.name not in bpy.data.node_groups:
             return "Imported tree is embedded (not a node group); cannot unpack it onto the canvas."
 
+        # The group interface nodes only make sense inside a group; once the
+        # contents are pasted loose into an existing tree they're just noise, so
+        # drop them (and their now-dangling links) before copying.
+        for node in list(imported_root.nodes):  # ty:ignore[unresolved-attribute]
+            if node.bl_idname in {"NodeGroupInput", "NodeGroupOutput"}:
+                imported_root.nodes.remove(node)  # ty:ignore[unresolved-attribute]
+
         # Reproduce the imported nodes in the active tree via Blender's own node
         # clipboard, so links, nested groups and every property come across
         # faithfully. We briefly push the imported root onto the editor path to
@@ -57,12 +64,44 @@ def post_import(
 
         bpy.ops.node.clipboard_paste()
 
+        # Move the freshly pasted (and selected) nodes so their center sits at the
+        # mouse cursor. We only shift parentless nodes so framed nodes aren't moved
+        # twice. The region->view conversion and ui_scale division mirror the
+        # single-group placement in add_as_group (node space = view space / ui_scale).
+        pasted_roots = [
+            node
+            for node in target_tree.nodes  # ty:ignore[unresolved-attribute]
+            if node.select and node.parent is None
+        ]
+        if pasted_roots:
+            target = context.region.view2d.region_to_view(  # ty:ignore[possibly-missing-attribute]
+                event.mouse_region_x, event.mouse_region_y
+            )
+            ui_scale = context.preferences.system.ui_scale  # ty:ignore[possibly-missing-attribute]
+            target_x = target[0] / ui_scale
+            target_y = target[1] / ui_scale
+
+            center_x = (
+                min(node.location.x for node in pasted_roots)
+                + max(node.location.x for node in pasted_roots)
+            ) / 2
+            center_y = (
+                min(node.location.y for node in pasted_roots)
+                + max(node.location.y for node in pasted_roots)
+            ) / 2
+
+            offset_x = target_x - center_x
+            offset_y = target_y - center_y
+            for node in pasted_roots:
+                node.location.x += offset_x
+                node.location.y += offset_y
+
         # The root group only existed to ferry the nodes across; the pasted nodes
         # are now independent in the active tree. Nested groups are referenced, not
         # owned by it, so they survive its removal.
         bpy.data.node_groups.remove(imported_root)  # ty:ignore[invalid-argument-type]
 
-        # let the user position the freshly pasted (and selected) nodes
+        # leave the user in a grab so they can reposition before dropping
         bpy.ops.node.translate_attach_remove_on_cancel("INVOKE_DEFAULT")
 
     def add_as_group() -> str | None:

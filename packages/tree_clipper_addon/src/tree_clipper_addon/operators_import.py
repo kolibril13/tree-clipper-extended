@@ -28,6 +28,44 @@ TIMER = None
 _UNPACK_INTO_ACTIVE_TREE = False
 
 
+def _prepare_import_cache(
+    operator: bpy.types.Operator,
+    *,
+    string: str | None = None,
+    file_path: "Path | None" = None,
+) -> bool:
+    """Build the import cache from the clipboard or a file.
+
+    Reports a readable error (instead of raising a traceback) when the input is
+    empty or doesn't contain a valid Tree Clipper node tree. Returns True on
+    success, False if the calling operator should cancel.
+    """
+    global _INTERMEDIATE_IMPORT_CACHE
+    source = "clipboard" if string is not None else "file"
+
+    if string is not None and not string.strip():
+        _INTERMEDIATE_IMPORT_CACHE = None
+        operator.report(
+            {"ERROR"},
+            "The clipboard is empty - copy a node tree (or a Tree Clipper string) first.",
+        )
+        return False
+
+    try:
+        _INTERMEDIATE_IMPORT_CACHE = ImportIntermediate(
+            string=string, file_path=file_path
+        )
+    except (ValueError, KeyError, RuntimeError, OSError) as exception:
+        _INTERMEDIATE_IMPORT_CACHE = None
+        operator.report(
+            {"ERROR"},
+            f"Could not read a Tree Clipper node tree from the {source}: {exception}",
+        )
+        return False
+
+    return True
+
+
 class SCENE_OT_Tree_Clipper_Extended_Import_File_Prepare(bpy.types.Operator):
     bl_idname = "scene.tree_clipper_extended_import_file_prepare"
     bl_label = "Import File"
@@ -47,8 +85,9 @@ class SCENE_OT_Tree_Clipper_Extended_Import_File_Prepare(bpy.types.Operator):
     def execute(
         self, context: bpy.types.Context
     ) -> set["rna_enums.OperatorReturnItems"]:
-        global _INTERMEDIATE_IMPORT_CACHE, _UNPACK_INTO_ACTIVE_TREE
-        _INTERMEDIATE_IMPORT_CACHE = ImportIntermediate(file_path=Path(self.input_file))
+        global _UNPACK_INTO_ACTIVE_TREE
+        if not _prepare_import_cache(self, file_path=Path(self.input_file)):
+            return {"CANCELLED"}
         _UNPACK_INTO_ACTIVE_TREE = False
 
         # seems impossible to use bl_idname here
@@ -64,10 +103,12 @@ class SCENE_OT_Tree_Clipper_Extended_Import_Clipboard_Prepare(bpy.types.Operator
     def execute(
         self, context: bpy.types.Context
     ) -> set["rna_enums.OperatorReturnItems"]:
-        global _INTERMEDIATE_IMPORT_CACHE, _UNPACK_INTO_ACTIVE_TREE
-        _INTERMEDIATE_IMPORT_CACHE = ImportIntermediate(
-            string=bpy.context.window_manager.clipboard  # ty:ignore[possibly-missing-attribute]
-        )
+        global _UNPACK_INTO_ACTIVE_TREE
+        if not _prepare_import_cache(
+            self,
+            string=bpy.context.window_manager.clipboard,  # ty:ignore[possibly-missing-attribute]
+        ):
+            return {"CANCELLED"}
         _UNPACK_INTO_ACTIVE_TREE = False
 
         # seems impossible to use bl_idname here
@@ -87,10 +128,12 @@ class SCENE_OT_Tree_Clipper_Extended_Paste_As_Nodes(bpy.types.Operator):
     def execute(
         self, context: bpy.types.Context
     ) -> set["rna_enums.OperatorReturnItems"]:
-        global _INTERMEDIATE_IMPORT_CACHE, _UNPACK_INTO_ACTIVE_TREE
-        _INTERMEDIATE_IMPORT_CACHE = ImportIntermediate(
-            string=bpy.context.window_manager.clipboard  # ty:ignore[possibly-missing-attribute]
-        )
+        global _UNPACK_INTO_ACTIVE_TREE
+        if not _prepare_import_cache(
+            self,
+            string=bpy.context.window_manager.clipboard,  # ty:ignore[possibly-missing-attribute]
+        ):
+            return {"CANCELLED"}
         _UNPACK_INTO_ACTIVE_TREE = True
 
         # seems impossible to use bl_idname here
