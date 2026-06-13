@@ -20,8 +20,8 @@ from .preferences import get_max_clipboard_bytes, get_show_advanced_options
 _INTERMEDIATE_EXPORT_CACHE = None
 
 
-class SCENE_OT_Tree_Clipper_Export_Prepare(bpy.types.Operator):
-    bl_idname = "scene.tree_clipper_export_prepare"
+class SCENE_OT_Tree_Clipper_Extended_Export_Prepare(bpy.types.Operator):
+    bl_idname = "scene.tree_clipper_extended_export_prepare"
     bl_label = "Export"
     bl_options = {"REGISTER"}
 
@@ -56,7 +56,7 @@ class SCENE_OT_Tree_Clipper_Export_Prepare(bpy.types.Operator):
         )
 
         # seems impossible to use bl_idname here
-        bpy.ops.scene.tree_clipper_export_modal("INVOKE_DEFAULT")  # ty: ignore[unresolved-attribute]
+        bpy.ops.scene.tree_clipper_extended_export_modal("INVOKE_DEFAULT")  # ty: ignore[unresolved-attribute]
         return {"FINISHED"}
 
     def draw(self, context: bpy.types.Context) -> None:
@@ -69,8 +69,8 @@ class SCENE_OT_Tree_Clipper_Export_Prepare(bpy.types.Operator):
         self.layout.prop(self, "write_from_roots")  # ty:ignore[possibly-missing-attribute]
 
 
-class SCENE_OT_Tree_Clipper_Export_Modal(bpy.types.Operator):
-    bl_idname = "scene.tree_clipper_export_modal"
+class SCENE_OT_Tree_Clipper_Extended_Export_Modal(bpy.types.Operator):
+    bl_idname = "scene.tree_clipper_extended_export_modal"
     bl_label = "Export Modal"
     bl_options = set()
 
@@ -111,11 +111,11 @@ class SCENE_OT_Tree_Clipper_Export_Modal(bpy.types.Operator):
             self.report({"WARNING"}, warning)
 
         # seems impossible to use bl_idname here
-        bpy.ops.scene.tree_clipper_export_cache("INVOKE_DEFAULT")  # ty: ignore[unresolved-attribute]
+        bpy.ops.scene.tree_clipper_extended_export_cache("INVOKE_DEFAULT")  # ty: ignore[unresolved-attribute]
         return {"FINISHED"}
 
 
-class SCENE_UL_Tree_Clipper_External_Export_List(bpy.types.UIList):
+class SCENE_UL_Tree_Clipper_Extended_External_Export_List(bpy.types.UIList):
     def draw_item(
         self,
         context: bpy.types.Context,
@@ -129,7 +129,7 @@ class SCENE_UL_Tree_Clipper_External_Export_List(bpy.types.UIList):
         flt_flag: int | None,
     ) -> None:
         assert isinstance(_INTERMEDIATE_EXPORT_CACHE, ExportIntermediate)
-        assert isinstance(item, Tree_Clipper_External_Export_Item)
+        assert isinstance(item, Tree_Clipper_Extended_External_Export_Item)
         external = _INTERMEDIATE_EXPORT_CACHE.get_external()[item.external_id]
         pointer = external.pointed_to_by
         row = layout.row()
@@ -138,7 +138,7 @@ class SCENE_UL_Tree_Clipper_External_Export_List(bpy.types.UIList):
         row.prop(item, "skip")
 
 
-class Tree_Clipper_External_Export_Item(bpy.types.PropertyGroup):
+class Tree_Clipper_Extended_External_Export_Item(bpy.types.PropertyGroup):
     external_id: bpy.props.IntProperty()  # type: ignore
     description: bpy.props.StringProperty(name="", default=DEFAULT_HINT)  # type: ignore
     skip: bpy.props.BoolProperty(name="Hide in Import", default=False)  # type: ignore
@@ -150,8 +150,8 @@ _CLIPBOARD = "Clipboard"
 _FILE = "File"
 
 
-class SCENE_OT_Tree_Clipper_Export_Cache(bpy.types.Operator):
-    bl_idname = "scene.tree_clipper_export_cache"
+class SCENE_OT_Tree_Clipper_Extended_Export_Cache(bpy.types.Operator):
+    bl_idname = "scene.tree_clipper_extended_export_cache"
     bl_label = "Export Cache"
     bl_options = set()
 
@@ -165,7 +165,7 @@ class SCENE_OT_Tree_Clipper_Export_Cache(bpy.types.Operator):
     compress_or_json: bpy.props.EnumProperty(items=[(_COMPRESS,) * 3, (_JSON,) * 3])  # type: ignore
     json_indent: bpy.props.IntProperty(name="JSON Indent", default=4, min=0)  # type: ignore
 
-    external_items: bpy.props.CollectionProperty(type=Tree_Clipper_External_Export_Item)  # type: ignore
+    external_items: bpy.props.CollectionProperty(type=Tree_Clipper_Extended_External_Export_Item)  # type: ignore
     selected_external_item: bpy.props.IntProperty()  # type: ignore
 
     def invoke(
@@ -235,7 +235,7 @@ class SCENE_OT_Tree_Clipper_Export_Cache(bpy.types.Operator):
 
         self.layout.label(text="References to External:")  # ty:ignore[possibly-missing-attribute]
         self.layout.template_list(  # ty:ignore[possibly-missing-attribute]
-            listtype_name="SCENE_UL_Tree_Clipper_External_Export_List",
+            listtype_name="SCENE_UL_Tree_Clipper_Extended_External_Export_List",
             list_id="",
             dataptr=self,
             propname="external_items",

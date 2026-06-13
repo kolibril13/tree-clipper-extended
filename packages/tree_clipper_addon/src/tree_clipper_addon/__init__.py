@@ -14,56 +14,56 @@
 import bpy
 
 from .operators_export import (
-    Tree_Clipper_External_Export_Item,
-    SCENE_UL_Tree_Clipper_External_Export_List,
-    SCENE_OT_Tree_Clipper_Export_Cache,
-    SCENE_OT_Tree_Clipper_Export_Modal,
-    SCENE_OT_Tree_Clipper_Export_Prepare,
+    Tree_Clipper_Extended_External_Export_Item,
+    SCENE_UL_Tree_Clipper_Extended_External_Export_List,
+    SCENE_OT_Tree_Clipper_Extended_Export_Cache,
+    SCENE_OT_Tree_Clipper_Extended_Export_Modal,
+    SCENE_OT_Tree_Clipper_Extended_Export_Prepare,
 )
 
 from .operators_import import (
-    Tree_Clipper_External_Import_Item,
-    Tree_Clipper_External_Import_Items,
-    SCENE_UL_Tree_Clipper_External_Import_List,
-    SCENE_OT_Tree_Clipper_Import_Cache,
-    SCENE_OT_Tree_Clipper_Import_File_Prepare,
-    SCENE_OT_Tree_Clipper_Import_Clipboard_Prepare,
-    SCENE_OT_Tree_Clipper_Import_Modal,
+    Tree_Clipper_Extended_External_Import_Item,
+    Tree_Clipper_Extended_External_Import_Items,
+    SCENE_UL_Tree_Clipper_Extended_External_Import_List,
+    SCENE_OT_Tree_Clipper_Extended_Import_Cache,
+    SCENE_OT_Tree_Clipper_Extended_Import_File_Prepare,
+    SCENE_OT_Tree_Clipper_Extended_Import_Clipboard_Prepare,
+    SCENE_OT_Tree_Clipper_Extended_Import_Modal,
 )
 
-from .panel import SCENE_PT_Tree_Clipper_Panel
+from .panel import SCENE_PT_Tree_Clipper_Extended_Panel
 
-from .preferences import TreeClipperPreferences
+from .preferences import TreeClipperExtendedPreferences
 
 classes = [
-    Tree_Clipper_External_Export_Item,
-    SCENE_UL_Tree_Clipper_External_Export_List,
-    SCENE_OT_Tree_Clipper_Export_Cache,
-    SCENE_OT_Tree_Clipper_Export_Modal,
-    SCENE_OT_Tree_Clipper_Export_Prepare,
-    Tree_Clipper_External_Import_Item,
-    Tree_Clipper_External_Import_Items,
-    SCENE_UL_Tree_Clipper_External_Import_List,
-    SCENE_OT_Tree_Clipper_Import_Modal,
-    SCENE_OT_Tree_Clipper_Import_Cache,
-    SCENE_OT_Tree_Clipper_Import_File_Prepare,
-    SCENE_OT_Tree_Clipper_Import_Clipboard_Prepare,
-    SCENE_PT_Tree_Clipper_Panel,
-    TreeClipperPreferences,
+    Tree_Clipper_Extended_External_Export_Item,
+    SCENE_UL_Tree_Clipper_Extended_External_Export_List,
+    SCENE_OT_Tree_Clipper_Extended_Export_Cache,
+    SCENE_OT_Tree_Clipper_Extended_Export_Modal,
+    SCENE_OT_Tree_Clipper_Extended_Export_Prepare,
+    Tree_Clipper_Extended_External_Import_Item,
+    Tree_Clipper_Extended_External_Import_Items,
+    SCENE_UL_Tree_Clipper_Extended_External_Import_List,
+    SCENE_OT_Tree_Clipper_Extended_Import_Modal,
+    SCENE_OT_Tree_Clipper_Extended_Import_Cache,
+    SCENE_OT_Tree_Clipper_Extended_Import_File_Prepare,
+    SCENE_OT_Tree_Clipper_Extended_Import_Clipboard_Prepare,
+    SCENE_PT_Tree_Clipper_Extended_Panel,
+    TreeClipperExtendedPreferences,
 ]
 
 
 def register() -> None:
-    print("Registering Tree Clipper")
+    print("Registering Tree Clipper Extended")
     for cls in classes:
         bpy.utils.register_class(cls)
     # the pointer properties in the items make it impossible to store on the operator
-    bpy.types.Scene.tree_clipper_external_import_items = bpy.props.PointerProperty(  # ty: ignore[unresolved-attribute]
-        type=Tree_Clipper_External_Import_Items
+    bpy.types.Scene.tree_clipper_extended_external_import_items = bpy.props.PointerProperty(  # ty: ignore[unresolved-attribute]
+        type=Tree_Clipper_Extended_External_Import_Items
     )
 
 
 def unregister() -> None:
-    del bpy.types.Scene.tree_clipper_external_import_items  # ty: ignore[unresolved-attribute]
+    del bpy.types.Scene.tree_clipper_extended_external_import_items  # ty: ignore[unresolved-attribute]
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
