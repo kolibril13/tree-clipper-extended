@@ -3,6 +3,7 @@ import bpy
 from .operators_export import SCENE_OT_Tree_Clipper_Extended_Export_Prepare
 from .operators_import import (
     SCENE_OT_Tree_Clipper_Extended_Import_Clipboard_Prepare,
+    SCENE_OT_Tree_Clipper_Extended_Paste_As_Nodes,
     SCENE_OT_Tree_Clipper_Extended_Import_File_Prepare,
 )
 
@@ -40,4 +41,5 @@ class SCENE_PT_Tree_Clipper_Extended_Panel(bpy.types.Panel):
 
         import_col = self.layout.column()  # ty:ignore[possibly-missing-attribute]
         import_col.operator(SCENE_OT_Tree_Clipper_Extended_Import_Clipboard_Prepare.bl_idname)
+        import_col.operator(SCENE_OT_Tree_Clipper_Extended_Paste_As_Nodes.bl_idname)
         import_col.operator(SCENE_OT_Tree_Clipper_Extended_Import_File_Prepare.bl_idname)

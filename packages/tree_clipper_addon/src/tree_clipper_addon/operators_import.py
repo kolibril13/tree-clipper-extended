@@ -23,6 +23,10 @@ from .preferences import get_show_advanced_options
 _INTERMEDIATE_IMPORT_CACHE = None
 TIMER = None
 
+# Whether the next import should be unpacked directly into the active node tree
+# (loose nodes on the canvas) instead of being wrapped in a single group node.
+_UNPACK_INTO_ACTIVE_TREE = False
+
 
 class SCENE_OT_Tree_Clipper_Extended_Import_File_Prepare(bpy.types.Operator):
     bl_idname = "scene.tree_clipper_extended_import_file_prepare"
@@ -43,8 +47,9 @@ class SCENE_OT_Tree_Clipper_Extended_Import_File_Prepare(bpy.types.Operator):
     def execute(
         self, context: bpy.types.Context
     ) -> set["rna_enums.OperatorReturnItems"]:
-        global _INTERMEDIATE_IMPORT_CACHE
+        global _INTERMEDIATE_IMPORT_CACHE, _UNPACK_INTO_ACTIVE_TREE
         _INTERMEDIATE_IMPORT_CACHE = ImportIntermediate(file_path=Path(self.input_file))
+        _UNPACK_INTO_ACTIVE_TREE = False
 
         # seems impossible to use bl_idname here
         bpy.ops.scene.tree_clipper_extended_import_cache("INVOKE_DEFAULT")  # ty: ignore[unresolved-attribute]
@@ -59,10 +64,34 @@ class SCENE_OT_Tree_Clipper_Extended_Import_Clipboard_Prepare(bpy.types.Operator
     def execute(
         self, context: bpy.types.Context
     ) -> set["rna_enums.OperatorReturnItems"]:
-        global _INTERMEDIATE_IMPORT_CACHE
+        global _INTERMEDIATE_IMPORT_CACHE, _UNPACK_INTO_ACTIVE_TREE
         _INTERMEDIATE_IMPORT_CACHE = ImportIntermediate(
             string=bpy.context.window_manager.clipboard  # ty:ignore[possibly-missing-attribute]
         )
+        _UNPACK_INTO_ACTIVE_TREE = False
+
+        # seems impossible to use bl_idname here
+        bpy.ops.scene.tree_clipper_extended_import_cache("INVOKE_DEFAULT")  # ty: ignore[unresolved-attribute]
+        return {"FINISHED"}
+
+
+class SCENE_OT_Tree_Clipper_Extended_Paste_As_Nodes(bpy.types.Operator):
+    bl_idname = "scene.tree_clipper_extended_paste_as_nodes"
+    bl_label = "Paste as Nodes"
+    bl_description = (
+        "Import the node tree from the clipboard and unpack it directly into the "
+        "active node tree, instead of wrapping it in a single group node"
+    )
+    bl_options = {"REGISTER"}
+
+    def execute(
+        self, context: bpy.types.Context
+    ) -> set["rna_enums.OperatorReturnItems"]:
+        global _INTERMEDIATE_IMPORT_CACHE, _UNPACK_INTO_ACTIVE_TREE
+        _INTERMEDIATE_IMPORT_CACHE = ImportIntermediate(
+            string=bpy.context.window_manager.clipboard  # ty:ignore[possibly-missing-attribute]
+        )
+        _UNPACK_INTO_ACTIVE_TREE = True
 
         # seems impossible to use bl_idname here
         bpy.ops.scene.tree_clipper_extended_import_cache("INVOKE_DEFAULT")  # ty: ignore[unresolved-attribute]
@@ -250,6 +279,10 @@ class SCENE_OT_Tree_Clipper_Extended_Import_Modal(bpy.types.Operator):
 
         _INTERMEDIATE_IMPORT_CACHE = None
 
-        post_import(context=context, event=event, report=report)
+        global _UNPACK_INTO_ACTIVE_TREE
+        unpack = _UNPACK_INTO_ACTIVE_TREE
+        _UNPACK_INTO_ACTIVE_TREE = False
+
+        post_import(context=context, event=event, report=report, unpack=unpack)
 
         return {"FINISHED"}

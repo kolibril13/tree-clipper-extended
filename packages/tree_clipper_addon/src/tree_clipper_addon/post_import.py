@@ -15,7 +15,56 @@ def post_import(
     context: bpy.types.Context,
     event: bpy.types.Event,
     report: ImportReport,
+    unpack: bool = False,
 ) -> None:
+    def add_unpacked() -> str | None:
+        if not isinstance(context.space_data, bpy.types.SpaceNodeEditor):
+            return "Not a node editor."
+
+        space = context.space_data
+        target_tree = space.edit_tree
+        if target_tree is None:
+            return "No active tree to attach to."
+
+        assert report.last_getter is not None
+        imported_root = report.last_getter()
+
+        if target_tree.bl_rna.identifier != imported_root.bl_rna.identifier:  # ty:ignore[unresolved-attribute]
+            return f"Editor type is {target_tree.bl_rna.identifier}, but imported {imported_root.bl_rna.identifier}."  # ty:ignore[unresolved-attribute]
+
+        # Only a reusable node-group datablock can be unpacked; an embedded
+        # tree (e.g. a material's node tree) has no entry here and stays grouped.
+        if imported_root.name not in bpy.data.node_groups:
+            return "Imported tree is embedded (not a node group); cannot unpack it onto the canvas."
+
+        # Reproduce the imported nodes in the active tree via Blender's own node
+        # clipboard, so links, nested groups and every property come across
+        # faithfully. We briefly push the imported root onto the editor path to
+        # copy from it, then pop back so the user's current location is restored.
+        try:
+            space.path.append(imported_root)  # ty:ignore[possibly-missing-attribute]
+            try:
+                for node in imported_root.nodes:  # ty:ignore[unresolved-attribute]
+                    node.select = True
+                bpy.ops.node.clipboard_copy()
+            finally:
+                space.path.pop()  # ty:ignore[possibly-missing-attribute]
+        except RuntimeError as exception:
+            return f"Could not copy imported nodes: {exception}"
+
+        for node in target_tree.nodes:  # ty:ignore[unresolved-attribute]
+            node.select = False
+
+        bpy.ops.node.clipboard_paste()
+
+        # The root group only existed to ferry the nodes across; the pasted nodes
+        # are now independent in the active tree. Nested groups are referenced, not
+        # owned by it, so they survive its removal.
+        bpy.data.node_groups.remove(imported_root)  # ty:ignore[invalid-argument-type]
+
+        # let the user position the freshly pasted (and selected) nodes
+        bpy.ops.node.translate_attach_remove_on_cancel("INVOKE_DEFAULT")
+
     def add_as_group() -> str | None:
         if not isinstance(context.space_data, bpy.types.SpaceNodeEditor):
             return "Not a node editor."
@@ -50,7 +99,7 @@ def post_import(
 
         bpy.ops.node.translate_attach_remove_on_cancel("INVOKE_DEFAULT")
 
-    failure_reason = add_as_group()
+    failure_reason = add_unpacked() if unpack else add_as_group()
     if failure_reason is not None:
 
         def warn_popup():

@@ -28,6 +28,7 @@ from .operators_import import (
     SCENE_OT_Tree_Clipper_Extended_Import_Cache,
     SCENE_OT_Tree_Clipper_Extended_Import_File_Prepare,
     SCENE_OT_Tree_Clipper_Extended_Import_Clipboard_Prepare,
+    SCENE_OT_Tree_Clipper_Extended_Paste_As_Nodes,
     SCENE_OT_Tree_Clipper_Extended_Import_Modal,
 )
 
@@ -48,6 +49,7 @@ classes = [
     SCENE_OT_Tree_Clipper_Extended_Import_Cache,
     SCENE_OT_Tree_Clipper_Extended_Import_File_Prepare,
     SCENE_OT_Tree_Clipper_Extended_Import_Clipboard_Prepare,
+    SCENE_OT_Tree_Clipper_Extended_Paste_As_Nodes,
     SCENE_PT_Tree_Clipper_Extended_Panel,
     TreeClipperExtendedPreferences,
 ]
