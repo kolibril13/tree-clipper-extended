@@ -9,6 +9,97 @@ TREE_TYPE_TO_GROUP_TYPE = {
     bpy.types.TextureNodeTree: bpy.types.TextureNodeGroup,
 }
 
+GROUP_IO_IDNAMES = {"NodeGroupInput", "NodeGroupOutput"}
+
+
+def _merge_interface(
+    src_tree: bpy.types.NodeTree, dst_tree: bpy.types.NodeTree
+) -> dict[str, str]:
+    """Copy ``src_tree``'s interface onto ``dst_tree`` and return a map from each
+    source interface item identifier to the matching identifier on ``dst_tree``.
+
+    Blender's node clipboard cannot carry a tree interface, so when the imported
+    nodes are pasted loose into the active tree their Group Input/Output nodes
+    would otherwise bind to the target tree's interface. We append the imported
+    sockets (reusing pre-existing ones so a second paste doesn't pile up
+    duplicates) and hand back the mapping so the group-io links can be rebuilt.
+
+    We deliberately work with identifier strings rather than item references:
+    adding interface items can invalidate previously fetched Python wrappers.
+    """
+    src_iface = src_tree.interface
+    dst_iface = dst_tree.interface
+    assert src_iface is not None and dst_iface is not None
+
+    # Snapshot the sockets that already existed on the target as plain data and
+    # consume each match once, so repeated names (e.g. several "Scale" inputs)
+    # still map to distinct sockets.
+    existing = [
+        (item.identifier, (item.name, item.in_out, item.socket_type))
+        for item in dst_iface.items_tree
+        if item.item_type == "SOCKET"
+    ]
+    consumed: set[str] = set()
+
+    def match_existing(key: tuple) -> str | None:
+        for identifier, existing_key in existing:
+            if identifier in consumed:
+                continue
+            if existing_key == key:
+                consumed.add(identifier)
+                return identifier
+        return None
+
+    def find_panel(identifier: str) -> bpy.types.NodeTreeInterfacePanel | None:
+        for item in dst_iface.items_tree:
+            if item.item_type == "PANEL" and item.identifier == identifier:
+                return item  # ty:ignore[invalid-return-type, unresolved-attribute]
+        return None
+
+    iface_map: dict[str, str] = {}
+    panel_map: dict[str, str] = {}  # src panel identifier -> dst panel identifier
+
+    for item in src_iface.items_tree:
+        parent_dst_id: str | None = None
+        if item.parent is not None and item.parent.index >= 0:
+            parent_dst_id = panel_map.get(item.parent.identifier)  # ty:ignore[unresolved-attribute]
+
+        if item.item_type == "PANEL":
+            new_panel = dst_iface.new_panel(
+                name=item.name,
+                description=item.description,
+                default_closed=item.default_closed,
+            )
+            new_identifier = new_panel.identifier  # ty:ignore[unresolved-attribute]
+            if parent_dst_id is not None:
+                parent = find_panel(parent_dst_id)
+                if parent is not None:
+                    dst_iface.move_to_parent(
+                        item=new_panel,
+                        parent=parent,
+                        to_position=len(parent.interface_items),
+                    )
+            panel_map[item.identifier] = new_identifier
+            iface_map[item.identifier] = new_identifier
+            continue
+
+        matched = match_existing((item.name, item.in_out, item.socket_type))
+        if matched is not None:
+            iface_map[item.identifier] = matched
+            continue
+
+        parent = find_panel(parent_dst_id) if parent_dst_id is not None else None
+        new_socket = dst_iface.new_socket(
+            name=item.name,
+            description=item.description,
+            in_out=item.in_out,
+            socket_type=item.socket_type,
+            parent=parent,
+        )
+        iface_map[item.identifier] = new_socket.identifier
+
+    return iface_map
+
 
 def post_import(
     *,
@@ -37,12 +128,62 @@ def post_import(
         if imported_root.name not in bpy.data.node_groups:
             return "Imported tree is embedded (not a node group); cannot unpack it onto the canvas."
 
-        # The group interface nodes only make sense inside a group; once the
-        # contents are pasted loose into an existing tree they're just noise, so
-        # drop them (and their now-dangling links) before copying.
-        for node in list(imported_root.nodes):  # ty:ignore[unresolved-attribute]
-            if node.bl_idname in {"NodeGroupInput", "NodeGroupOutput"}:
-                imported_root.nodes.remove(node)  # ty:ignore[unresolved-attribute]
+        def is_group_io(node: bpy.types.Node) -> bool:
+            return node.bl_idname in GROUP_IO_IDNAMES
+
+        # A self-contained group carries its own interface *and* Group
+        # Input/Output nodes. Pasted loose it would duplicate the host tree's
+        # interface nodes, blend unrelated interface sockets together and leave a
+        # dead "Unused Output", so such content belongs in a group node: hand it
+        # to the grouped path instead of unpacking it.
+        interface = imported_root.interface  # ty:ignore[unresolved-attribute]
+        if (
+            interface is not None
+            and len(interface.items_tree) > 0
+            and any(is_group_io(node) for node in imported_root.nodes)  # ty:ignore[unresolved-attribute]
+        ):
+            return add_as_group()
+
+        # Selection is expressed by what's present in the magic string: the web
+        # renderer filters unselected nodes out on copy, so any Group Input/Output
+        # node that survived into the import was meant to come across. We keep them
+        # (with the group's interface) whenever they're present, and otherwise
+        # skip the interface merge so we don't pollute the target tree.
+        keep_group_io = any(
+            is_group_io(node)
+            for node in imported_root.nodes  # ty:ignore[unresolved-attribute]
+        )
+
+        # The clipboard can't carry a tree interface or its Group Input/Output
+        # links, so when we keep those nodes we capture both before copying. We
+        # tag every imported node with a unique sentinel name (the clipboard
+        # preserves unique names) to pair it with its pasted copy afterwards, and
+        # record each link touching a group-io node to rebuild once the interface
+        # is in place.
+        sentinel_prefix = "_tc_unpack_sentinel_"
+        original_names: dict[str, str] = {}
+        # (from_sentinel, from_socket_id, from_via_iface,
+        #  to_sentinel, to_socket_id, to_via_iface)
+        group_io_links: list[tuple[str, str, bool, str, str, bool]] = []
+        if keep_group_io:
+            for index, node in enumerate(imported_root.nodes):  # ty:ignore[unresolved-attribute]
+                sentinel = f"{sentinel_prefix}{index}"
+                original_names[sentinel] = node.name
+                node.name = sentinel
+
+            for link in imported_root.links:  # ty:ignore[unresolved-attribute]
+                if not (is_group_io(link.from_node) or is_group_io(link.to_node)):
+                    continue
+                group_io_links.append(
+                    (
+                        link.from_node.name,
+                        link.from_socket.identifier,
+                        is_group_io(link.from_node),
+                        link.to_node.name,
+                        link.to_socket.identifier,
+                        is_group_io(link.to_node),
+                    )
+                )
 
         # Reproduce the imported nodes in the active tree via Blender's own node
         # clipboard, so links, nested groups and every property come across
@@ -57,12 +198,72 @@ def post_import(
             finally:
                 space.path.pop()  # ty:ignore[possibly-missing-attribute]
         except RuntimeError as exception:
+            for sentinel, name in original_names.items():
+                imported_root.nodes[sentinel].name = name  # ty:ignore[unresolved-attribute]
             return f"Could not copy imported nodes: {exception}"
 
         for node in target_tree.nodes:  # ty:ignore[unresolved-attribute]
             node.select = False
 
         bpy.ops.node.clipboard_paste()
+
+        # Bring the imported group's interface onto the target tree so the pasted
+        # Group Input/Output nodes expose the right sockets, then rebuild the
+        # links the clipboard dropped. Sentinel names still identify the freshly
+        # pasted nodes at this point; we restore the original names afterwards.
+        if keep_group_io:
+            iface_map = _merge_interface(imported_root, target_tree)  # ty:ignore[invalid-argument-type]
+            pasted_by_sentinel = {
+                node.name: node
+                for node in target_tree.nodes  # ty:ignore[unresolved-attribute]
+                if node.name in original_names
+            }
+
+            def resolve_socket(
+                node: bpy.types.Node,
+                socket_id: str,
+                *,
+                want_input: bool,
+                via_iface: bool,
+            ) -> bpy.types.NodeSocket | None:
+                if via_iface:
+                    mapped = iface_map.get(socket_id)
+                    if mapped is None:
+                        return None
+                    socket_id = mapped
+                sockets = node.inputs if want_input else node.outputs
+                for socket in sockets:
+                    if socket.identifier == socket_id:
+                        return socket
+                return None
+
+            for (
+                from_sentinel,
+                from_socket_id,
+                from_via_iface,
+                to_sentinel,
+                to_socket_id,
+                to_via_iface,
+            ) in group_io_links:
+                from_node = pasted_by_sentinel.get(from_sentinel)
+                to_node = pasted_by_sentinel.get(to_sentinel)
+                if from_node is None or to_node is None:
+                    continue
+                from_socket = resolve_socket(
+                    from_node, from_socket_id, want_input=False, via_iface=from_via_iface
+                )
+                to_socket = resolve_socket(
+                    to_node, to_socket_id, want_input=True, via_iface=to_via_iface
+                )
+                if from_socket is not None and to_socket is not None:
+                    target_tree.links.new(from_socket, to_socket)  # ty:ignore[unresolved-attribute]
+
+            # Hand the user-facing names back to the pasted nodes (Blender
+            # resolves any collisions with existing nodes automatically).
+            for sentinel, name in original_names.items():
+                node = pasted_by_sentinel.get(sentinel)
+                if node is not None:
+                    node.name = name
 
         # Move the freshly pasted (and selected) nodes so their center sits at the
         # mouse cursor. We only shift parentless nodes so framed nodes aren't moved
