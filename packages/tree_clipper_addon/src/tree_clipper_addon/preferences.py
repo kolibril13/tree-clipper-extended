@@ -1,7 +1,7 @@
 import bpy
 
 
-class TreeClipperExtendedPreferences(bpy.types.AddonPreferences):
+class TreeClipperPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
     max_clipboard_megabyte: bpy.props.IntProperty(

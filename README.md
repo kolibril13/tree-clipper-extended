@@ -1,8 +1,6 @@
 <img src="packages/tree_clipper/icon.svg" alt="Featured Image" width="70px" />
 
-# Tree Clipper Extended
-
-> A fork of [Tree Clipper](https://github.com/Algebraic-UG/tree_clipper) renamed so it can be installed alongside the original without colliding (distinct extension id, operators, panel and properties).
+# Tree Clipper
 
 Easier version control and sharing of node trees via `.json` or copy-pasteable strings.
 
