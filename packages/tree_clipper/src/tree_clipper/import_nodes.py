@@ -195,8 +195,13 @@ class Importer:
         ):
             if self.debug_prints:
                 print(f"{from_root.to_str()}: defer setting enum default for now")
+            location = from_root.to_str()
             self.set_socket_enum_defaults.append(
-                lambda: setattr(getter(), identifier, serialization)
+                (
+                    lambda: setattr(getter(), identifier, serialization),
+                    location,
+                    serialization,
+                )
             )
             return
 
@@ -518,8 +523,14 @@ Tree Clipper is skipping it.
         )
         self.current_tree = None
 
-        for func in self.set_socket_enum_defaults:
-            func()
+        for func, location, value in self.set_socket_enum_defaults:
+            try:
+                func()
+            except (TypeError, ValueError) as e:
+                self.report.warnings.append(
+                    f"{location}: could not set enum default value {value!r} "
+                    f"(valid options may be unavailable in this context): {e}"
+                )
         self.set_socket_enum_defaults.clear()
 
         self.report.last_getter = getter
