@@ -216,3 +216,6 @@ __marimo__/
 .streamlit/secrets.toml
 
 packages/tree_clipper_addon/src/tree_clipper_addon/_vendor/
+
+# Build artifacts
+*.zip
